@@ -123,3 +123,18 @@ td:last-child{font-weight:800;color:var(--navy)}
 .sw:checked{background:var(--royal)}
 @media(min-width:720px){.app{box-shadow:0 0 40px rgba(16,34,77,.12)}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* drawer menu */
+.drawer{padding:calc(env(safe-area-inset-top) + 12px) 0 0}
+.drawer .dbody{display:flex;flex-direction:column;padding:4px 8px 24px;overflow-y:auto}
+.drawer .dsec{margin:18px 12px 4px;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b}
+.drawer .ditem{display:flex;align-items:center;gap:14px;width:100%;padding:14px 12px;border-radius:12px;background:none;border:0;text-align:left;font:inherit;font-weight:700;color:var(--navy);text-decoration:none;cursor:pointer}
+.drawer .ditem .di{flex:1}
+.drawer .ditem .chv{margin-left:auto;opacity:.45;flex:none}
+.drawer .ditem svg:first-child{flex:none}
+.drawer .dhead{padding:0 8px 8px;border-bottom:1px solid #e5e9f0}
+.drawer .dprof{display:flex;align-items:center;gap:12px;padding:14px 12px}
+.drawer .dprof .dn{flex:1;font-weight:800}
+.drawer .av{width:42px;height:42px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;overflow:hidden;flex:none;font-size:.9rem}
+.drawer .av img{width:100%;height:100%;object-fit:cover}
+.drawer .badge.static{position:static}

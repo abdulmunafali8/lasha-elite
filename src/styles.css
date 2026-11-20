@@ -138,3 +138,58 @@ td:last-child{font-weight:800;color:var(--navy)}
 .drawer .av{width:42px;height:42px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;overflow:hidden;flex:none;font-size:.9rem}
 .drawer .av img{width:100%;height:100%;object-fit:cover}
 .drawer .badge.static{position:static}
+
+/* competition page */
+.ch .chr .ib{background:none;backdrop-filter:none;box-shadow:none;min-width:40px;padding:0}
+.ib svg{display:block}
+.tabs{gap:6px}
+.tabs button{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;padding:0}
+.tabs button span{white-space:nowrap}
+.sheet{position:relative;margin-top:-28px;background:#fff;border-radius:28px 28px 0 0}
+.sheet .hrow{margin-top:-44px}
+.info .irow{display:flex;align-items:center;gap:16px;color:inherit;text-decoration:none}
+.info .irow>span{flex:1;min-width:0}
+.info .irow>svg{flex:none;color:var(--mu)}
+.info dt{text-transform:uppercase;letter-spacing:.05em;font-size:.72rem;font-weight:700}
+.info .sdot{display:block;width:10px;height:10px;border-radius:50%;background:#3b82d6;flex:none;margin:0 7px}
+
+/* games tab */
+.apanel{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 6px;background:var(--navy);color:#fff;border-radius:22px;padding:22px 10px;margin:4px 0 14px}
+.apanel button{background:none;border:0;color:#fff;display:flex;flex-direction:column;align-items:center;gap:8px;font:inherit;font-weight:700;font-size:.92rem;text-align:center}
+.apanel button:disabled{opacity:.4}
+.apanel i{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;color:#fff}
+.mc{border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;margin:0;padding:16px 0;background:none}
+.cb{width:76px;height:76px;background:none;border:0;box-shadow:none}
+.side b{font-size:1.1rem;font-weight:700;color:var(--navy)}
+.score{background:none;color:var(--navy);border-radius:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:120px;font-size:2.7rem;letter-spacing:0}
+.score b{font-weight:800;line-height:1}
+.score .chip{font-style:normal;font-size:.78rem;font-weight:700;letter-spacing:.06em;color:#7b8499;background:#eceff5;border-radius:12px;padding:4px 14px}
+.score.idle{font-size:1.8rem;color:#cbd2e0;font-weight:700}
+
+/* three-dots menu */
+.mwrap{position:relative}
+.mscrim{position:fixed;inset:0;z-index:40}
+.pmenu{position:absolute;right:0;top:48px;z-index:41;background:#fff;color:var(--navy);border-radius:14px;box-shadow:0 10px 30px rgba(16,34,77,.28);min-width:170px;padding:6px}
+.pmenu a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:inherit;text-decoration:none;font-weight:700}
+.pmenu a:active{background:var(--bg)}
+
+/* settings page */
+.sform{display:grid;gap:18px;padding:14px 16px 8px}
+.sform .grow{display:grid;gap:16px}
+.sec{color:var(--mu);font-size:1.25rem;font-weight:800;margin:0;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.sec.dark{color:var(--navy);border:0;padding:0}
+.sform .fl{position:relative;display:block;font-size:inherit}
+.sform .fl>span{position:absolute;top:-10px;left:14px;background:#fff;padding:0 6px;font-size:.85rem;font-weight:700;color:var(--mu);z-index:1}
+.sform .fl input,.sform .fl textarea{display:block;width:100%;box-sizing:border-box;border:1.5px solid #c6ccd9;border-radius:10px;background:#fff;color:var(--navy);font-size:1.1rem;font-weight:600}
+.sform .fl input{height:56px;padding:0 14px}
+.sform .fl textarea{padding:16px 14px;min-height:120px}
+.sform .fl input:focus,.sform .fl textarea:focus{border-color:var(--royal);outline:0}
+.sform .drow{display:flex;align-items:center;gap:14px;color:var(--navy)}
+.sform .drow .fl{flex:1;min-width:0}
+.sform .chk{font-size:1.05rem!important;font-weight:600;padding:6px 4px}
+.srow2{display:flex;align-items:center;gap:14px;padding:14px 0;color:var(--navy);font-weight:700;font-size:1.1rem}
+.srow2 .ri{display:grid;place-items:center;width:28px;flex:none;color:var(--royal)}
+.srow2 .rl{min-width:0}
+.srow2 .lnk{background:none;border:0;color:var(--royal);font:inherit;font-weight:800;padding:4px 8px}
+.srow2 em{font-style:normal;font-size:.85rem;font-weight:600;color:var(--mu);margin-left:auto}
+.srow2.sp .rl{flex:1}

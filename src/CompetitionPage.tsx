@@ -11,6 +11,7 @@ const Crest=({url,name}:{url?:string;name:string})=>url?<img src={url} alt="" lo
 export default function CompetitionPage({id}:{id:string}){
 const {t}=useLang();const [user,setUser]=useState<User|null>(null);const [c,setC]=useState<Competition&{status?:string;isPrivate?:boolean;color?:string;website?:string;subhead?:string;description?:string}|null>(null);const [missing,setMissing]=useState(false);
 const [tab,setTab]=useState<Tab>("home");const [stageId,setStageId]=useState("");const [roundId,setRoundId]=useState("");
+const [rk,setRk]=useState<"scorers"|"assists"|"penalties"|"gk">("scorers");const [rs,setRs]=useState("");
 const [adding,setAdding]=useState(false);const [gen,setGen]=useState(false);const [br,setBr]=useState(false);const [editing,setEditing]=useState("");const [msg,setMsg]=useState("");
 useEffect(()=>onAuthStateChanged(auth,setUser),[]);
 useEffect(()=>onSnapshot(doc(db,"competitions",id),s=>s.exists()?setC({id:s.id,...s.data()} as never):setMissing(true),()=>setMissing(true)),[id]);
@@ -34,7 +35,6 @@ const share=()=>navigator.share?.({title:c.name,url:location.href}).catch(()=>{}
 const del=async(path:string)=>{if(confirm(t.sure))await deleteDoc(doc(db,path))};
 const stageMatches=matches.filter(m=>m.stageId===stageId);
 const stageSel=<select className="sel" value={stageId} onChange={e=>setStageId(e.target.value)} aria-label={t.stage}>{stages.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select>;
-const [rk,setRk]=useState<"scorers"|"assists"|"penalties"|"gk">("scorers");const [rs,setRs]=useState("");
 const tabs:Tab[]=["home","games","table","ranking","videos"];
 const label:Record<Tab,string>={home:t.home,games:t.games,table:t.table,ranking:t.ranking,videos:t.videos};
 return(<div className="app">

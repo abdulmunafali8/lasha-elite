@@ -193,3 +193,23 @@ td:last-child{font-weight:800;color:var(--navy)}
 .srow2 .lnk{background:none;border:0;color:var(--royal);font:inherit;font-weight:800;padding:4px 8px}
 .srow2 em{font-style:normal;font-size:.85rem;font-weight:600;color:var(--mu);margin-left:auto}
 .srow2.sp .rl{flex:1}
+
+/* export */
+.exscrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;display:grid;place-items:center}
+.exmenu{background:#eef1f7;border-radius:24px;padding:8px 0;width:min(320px,86%);box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.exmenu button{display:flex;align-items:center;gap:18px;width:100%;padding:16px 22px;background:none;border:0;font:inherit;font-weight:800;font-size:1.15rem;color:var(--navy);text-align:left}
+.exmenu button svg{color:var(--royal);flex:none}
+.exdlg{background:#eef1f7;border-radius:28px;padding:24px;width:min(340px,88%);box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.exdlg h3{margin:0 0 10px;font-size:1.8rem;color:var(--navy)}
+.exdlg .chk{font-weight:800;padding:10px 4px}
+.exact{display:flex;justify-content:flex-end;margin-top:12px}
+.exact .btn{margin:0}
+.exfull{position:fixed;inset:0;background:#fff;z-index:70;overflow-y:auto}
+.expv{background:#d9d9d9}
+.expv canvas{display:block;width:100%;max-width:640px;height:auto;margin:0 auto}
+.wseg{display:flex;flex-wrap:wrap;gap:10px}
+.wseg button{border:1.5px solid #c6ccd9;background:#fff;border-radius:12px;padding:12px 16px;font-weight:800;color:var(--navy)}
+.wseg button.on{background:#dfe5f4;border-color:var(--navy)}
+.sform .drow>input[type=checkbox],.exfull .srow input[type=checkbox]{width:24px;height:24px;flex:none}
+.exfull .srow{font-size:1.1rem;padding:16px 4px}
+.exfull .srow input[type=color]{width:44px;height:32px;border:0;padding:0;background:none}

@@ -13,7 +13,7 @@ export default function CompetitionPage({id}:{id:string}){
 const {t}=useLang();const [user,setUser]=useState<User|null>(null);const [c,setC]=useState<Competition&{status?:string;isPrivate?:boolean;color?:string;website?:string;subhead?:string;description?:string}|null>(null);const [missing,setMissing]=useState(false);
 const [tab,setTab]=useState<Tab>("home");const [stageId,setStageId]=useState("");const [roundId,setRoundId]=useState("");
 const [rk,setRk]=useState<"scorers"|"assists"|"penalties"|"gk">("scorers");const [rs,setRs]=useState("");
-const [adding,setAdding]=useState(false);const [gen,setGen]=useState(false);const [br,setBr]=useState(false);const [editing,setEditing]=useState("");const [msg,setMsg]=useState("");const [mo,setMo]=useState(false);const [ex,setEx]=useState(false);
+const [adding,setAdding]=useState(false);const [gen,setGen]=useState(false);const [br,setBr]=useState(false);const [editing,setEditing]=useState("");const [msg,setMsg]=useState("");const [mo,setMo]=useState(false);const [ex,setEx]=useState(false);const [needP,setNeedP]=useState(false);
 useEffect(()=>onAuthStateChanged(auth,setUser),[]);
 useEffect(()=>onSnapshot(doc(db,"competitions",id),s=>s.exists()?setC({id:s.id,...s.data()} as never):setMissing(true),()=>setMissing(true)),[id]);
 const col=(n:string)=>query(collection(db,"competitions",id,n),orderBy(n==="matches"?"createdAt":"order"));
@@ -55,7 +55,7 @@ return(<div className="app">
 <div className="pills">{sRounds.map(r=><button key={r.id} className={"pill"+(r.id===roundId?" on":"")} onClick={()=>setRoundId(r.id)}>{r.name}</button>)}
 {owner&&<button className="pill plus" onClick={addRound} aria-label={t.addRound}>+</button>}</div>
 {sRounds.some(r=>r.ko)&&<><button className="pill" onClick={()=>setBr(!br)}>🏆 {t.bracket}</button>{br&&<Bracket rounds={sRounds} matches={stageMatches} t={t}/>}</>}
-{owner&&!sRounds.length&&<div className="empty"><button className="btn" onClick={()=>setGen(true)}>{t.gen}</button><p>{t.or}</p><button className="btn" onClick={addRound}>{t.addRound}</button></div>}
+{owner&&!sRounds.length&&<div className="empty"><button className="btn" onClick={()=>players.length<2?setNeedP(true):setGen(true)}>{t.gen}</button><p>{t.or}</p><button className="btn" onClick={addRound}>{t.addRound}</button></div>}
 {gen&&owner&&stageId&&<Generate cid={id} stageId={stageId} players={players} hasMatches={stageMatches.length>0} allMatches={matches} stages={stages} groups={groups} t={t} onDone={()=>setGen(false)} onErr={setMsg}/>}
 {!stages.length&&<p className="muted">{t.pickRound}</p>}
 {matches.filter(m=>m.roundId===roundId).map(m=><MatchCard key={m.id} all={matches} m={m} owner={owner} open={editing===m.id} setOpen={o=>setEditing(o?m.id:"")} base={base} cid={id} t={t} onDel={()=>del(`${base}/matches/${m.id}`)} onErr={setMsg}/>)}
@@ -69,6 +69,7 @@ return(<div className="app">
 <div className="sh"><select className="sel" value={rs} onChange={e=>setRs(e.target.value)} aria-label={t.stage}><option value="">{t.allStages}</option>{stages.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select><span className="muted">{rows.length} {t.players}</span></div>
 {rows.length===0?<p className="muted ctr bigmu">{t.noData}</p>:rows.map((r,i)=><div key={r.id} className="prow"><b className="rk">{i+1}</b><span className="cr">{r.logoUrl?<img src={r.logoUrl} alt=""/>:r.name.slice(0,2).toUpperCase()}</span><div className="grow"><b>{r.name}</b>{r.sub&&<p className="muted">{r.sub}</p>}</div><b className="rv">{r.value}</b></div>)}</section>})()}
 {tab==="videos"&&<p className="muted pad">{t.soon}</p>}
+{needP&&<div className="exscrim" onClick={()=>setNeedP(false)}><div className="exdlg alert" onClick={e=>e.stopPropagation()}><p className="atitle">{t.noPlayers}</p><div className="exact"><a className="alink" href={`#/competition/${id}/settings`} onClick={()=>{try{sessionStorage.setItem("openSec","players")}catch{}setNeedP(false)}}>{t.addPlayers}</a></div></div></div>}
 {ex&&<ExportMatches name={c.name} stages={stages} rounds={rounds} matches={matches} stageId={stageId} roundId={roundId} color={c.color} coverUrl={c.coverUrl} t={t} onClose={()=>setEx(false)} onMsg={setMsg}/>}
 </div>)}
 

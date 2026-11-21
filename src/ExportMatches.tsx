@@ -16,10 +16,10 @@ if(im){const s=Math.min(2*r*1.1/im.width,2*r*1.1/im.height);const w=im.width*s,h
 x.save();x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.closePath();x.clip();x.fillStyle="#e1e8f7";x.fillRect(cx-r,cy-r,2*r,2*r);
 x.fillStyle="#10224d";x.font=`800 ${Math.round(r*0.8)}px ${FONT}`;x.textAlign="center";x.textBaseline="middle";x.fillText(abbr(nm).slice(0,2),cx,cy);x.restore()};
 
-export default function ExportMatches({name,stages,rounds,matches,stageId,roundId,color,coverUrl,t,onClose,onMsg}:Props){
+export default function ExportMatches({name,stages,rounds,matches,stageId,roundId,coverUrl,t,onClose,onMsg}:Props){
 const [step,setStep]=useState<"menu"|"scope"|"image">("menu");const [scope,setScope]=useState<"stage"|"round">(roundId?"round":"stage");
 const [wk,setWk]=useState<WK>("DYNAMIC");const [showT,setShowT]=useState(true);const [tt,setTt]=useState(name);const [showR,setShowR]=useState(true);const [rt,setRt]=useState("");
-const [bg,setBg]=useState(color||"#172B59");const [cov,setCov]=useState(!!coverUrl);const [ab,setAb]=useState(false);
+const [bg,setBg]=useState("#ffffff");const [cov,setCov]=useState(false);const [ab,setAb]=useState(false);
 const cv=useRef<HTMLCanvasElement>(null);const cache=useRef(new Map<string,HTMLImageElement|null>());
 const stage=stages.find(s=>s.id===stageId);const round=rounds.find(r=>r.id===roundId);
 const rn=(rid:string)=>rounds.find(r=>r.id===rid)?.name??"";const ri=(rid:string)=>rounds.findIndex(r=>r.id===rid);
@@ -37,20 +37,24 @@ const draw=async(c:HTMLCanvasElement,off:()=>boolean)=>{
 const [CW,CH]=SIZES[wk];const n=list.length;const covImg=cov?await load(coverUrl):null;
 const imgs=await Promise.all(list.map(async m=>[await load((m as Match&Lg).homeLogo),await load((m as Match&Lg).awayLogo)] as const));
 if(off())return;
-const covH=covImg?280:0;const top=covH+40+(showT?84:0)+(showR?64:0)+20;
-const rowH=CH?Math.max(70,Math.min(200,Math.floor((CH-top-50)/Math.max(n,1)))):190;
-const H=CH||top+Math.max(n,1)*rowH+50;c.width=CW;c.height=H;
+const bgc=/^#[0-9a-f]{6}$/i.test(bg)?bg:"#ffffff";const k=parseInt(bgc.slice(1),16);const light=(0.299*(k>>16)+0.587*((k>>8)&255)+0.114*(k&255))/255>0.55;
+const fg=light?"#333333":"#ffffff",ln=light?"#e4e4e4":"rgba(255,255,255,.28)",gr=light?"#9a9a9a":"#cfd6e6";
+const covH=covImg?280:0;const top=covH+30+(showT?60:0)+(showR?46:0)+14;
+const rowH=CH?Math.max(70,Math.min(200,Math.floor((CH-top-20)/Math.max(n,1)))):165;
+const H=CH||top+Math.max(n,1)*rowH+20;c.width=CW;c.height=H;
 const x=c.getContext("2d");if(!x)return;
-const PX=40,PW=CW-PX*2;x.fillStyle=bg;x.fillRect(0,0,CW,H);x.fillStyle="#fff";x.fillRect(PX,0,PW,H);
-if(covImg){const s=Math.max(PW/covImg.width,covH/covImg.height);const w=covImg.width*s,h=covImg.height*s;x.save();x.beginPath();x.rect(PX,0,PW,covH);x.clip();x.drawImage(covImg,PX+(PW-w)/2,(covH-h)/2,w,h);x.restore()}
-x.textAlign="center";x.textBaseline="alphabetic";x.fillStyle="#10224d";let y=covH+40;
-if(showT){x.font=`800 52px ${FONT}`;y+=52;x.fillText(tt,CW/2,y,PW-60);y+=32}
-if(showR){x.font=`700 32px ${FONT}`;y+=32;x.fillText(rt.toUpperCase(),CW/2,y,PW-60)}
-const r=Math.min(52,rowH*0.27),cx1=PX+PW*0.25,cx2=PX+PW*0.75,fs=Math.max(22,Math.min(34,Math.round(rowH*0.17)));
-list.forEach((m,i)=>{const y0=top+i*rowH,cy=y0+rowH*0.4;x.strokeStyle="#e3e8f2";x.lineWidth=2;x.beginPath();x.moveTo(PX,y0);x.lineTo(PX+PW,y0);x.stroke();
+x.fillStyle=bgc;x.fillRect(0,0,CW,H);
+if(covImg){const s=Math.max(CW/covImg.width,covH/covImg.height);const w=covImg.width*s,h=covImg.height*s;x.save();x.beginPath();x.rect(0,0,CW,covH);x.clip();x.drawImage(covImg,(CW-w)/2,(covH-h)/2,w,h);x.restore()}
+x.textAlign="center";x.textBaseline="alphabetic";x.fillStyle=fg;let y=covH+30;
+if(showT){y+=46;x.font=`600 48px ${FONT}`;x.fillText(tt,CW/2,y,CW-60);y+=14}
+if(showR){y+=32;x.font=`700 32px ${FONT}`;x.fillText(rt.toUpperCase(),CW/2,y,CW-60);y+=14}
+const r=Math.min(38,rowH*0.23),cx1=CW*0.17,cx2=CW*0.83,fs=Math.max(20,Math.min(30,Math.round(rowH*0.165)));
+x.strokeStyle=ln;x.lineWidth=2;
+for(let i=0;i<=n;i++){const yy=top+i*rowH;x.beginPath();x.moveTo(0,yy);x.lineTo(CW,yy);x.stroke()}
+list.forEach((m,i)=>{const y0=top+i*rowH,cy=y0+rowH*0.4;
 const sides:[number,string,HTMLImageElement|null][]=[[cx1,String(m.homeName||t.tbd),imgs[i][0]],[cx2,String(m.awayName||t.tbd),imgs[i][1]]];
-sides.forEach(([cx,nm,im])=>{crest(x,cx,cy,r,nm,im);x.fillStyle="#10224d";x.font=`700 ${fs}px ${FONT}`;x.textAlign="center";x.textBaseline="alphabetic";x.fillText(ab?abbr(nm):nm,cx,cy+r+fs+6,PW*0.42)});
-x.fillStyle=m.status==="done"?"#10224d":"#9aa3b8";x.font=`800 ${m.status==="done"?56:36}px ${FONT}`;x.textAlign="center";x.textBaseline="middle";x.fillText(score(m),CW/2,cy);x.textBaseline="alphabetic"})};
+sides.forEach(([cx,nm,im])=>{crest(x,cx,cy,r,nm,im);x.fillStyle=fg;x.font=`500 ${fs}px ${FONT}`;x.textAlign="center";x.textBaseline="alphabetic";x.fillText(ab?abbr(nm):nm,cx,y0+rowH*0.82,CW*0.3)});
+const done=m.status==="done";x.fillStyle=done?fg:gr;x.font=done?`800 52px ${FONT}`:`400 26px ${FONT}`;x.textAlign="center";x.textBaseline="middle";x.fillText(score(m),CW/2,y0+rowH*0.52);x.textBaseline="alphabetic"})};
 useEffect(()=>{if(step!=="image")return;let off=false;const c=cv.current;if(c)void draw(c,()=>off);return()=>{off=true}},[step,wk,showT,tt,showR,rt,bg,cov,ab,scope,matches]);
 const download=()=>{try{cv.current?.toBlob(b=>{if(b)save(b,`${name}-${label}.png`)},"image/png")}catch{onMsg(t.err)}};
 if(step==="menu")return<div className="exscrim" onClick={onClose}><div className="exmenu" onClick={e=>e.stopPropagation()}>

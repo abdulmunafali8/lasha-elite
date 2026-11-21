@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useRef,useState} from "react";
 import {onAuthStateChanged,User} from "firebase/auth";
 import {collection,doc,onSnapshot,updateDoc,addDoc,deleteDoc,getDocs,query,where,orderBy} from "firebase/firestore";
 import {auth,db,uploadImg} from "./firebase";import {useLang} from "./i18n";import {useLive} from "./hooks";import ImagePick from "./ImagePick";import Players from "./Players";import Teams from "./Teams";import Groups from "./Groups";import {Stage} from "./types";
@@ -18,8 +18,9 @@ const SOON=["referees","places","rating","regs","pRanking","tResult"];
 export default function Settings({id}:{id:string}){
 const {t}=useLang();const [user,setUser]=useState<User|null|undefined>(undefined);const [c,setC]=useState<C|null>(null);const [msg,setMsg]=useState("");
 const [f,setF]=useState({name:"",subhead:"",desc:"",start:"",end:"",mode:"person",place:""});const [ready,setReady]=useState(false);
-const [logo,setLogo]=useState<File|null>(null);const [cover,setCover]=useState<File|null>(null);const [busy,setBusy]=useState(false);const [open,setOpen]=useState("");const [draft,setDraft]=useState("");
+const [logo,setLogo]=useState<File|null>(null);const [cover,setCover]=useState<File|null>(null);const [busy,setBusy]=useState(false);const [open,setOpen]=useState(()=>{try{const v=sessionStorage.getItem("openSec")||"";sessionStorage.removeItem("openSec");return v}catch{return ""}});const jumped=useRef(false);const [draft,setDraft]=useState("");
 useEffect(()=>onAuthStateChanged(auth,setUser),[]);
+useEffect(()=>{if(open==="players"&&c&&user&&!jumped.current){jumped.current=true;setTimeout(()=>document.getElementById("sec-players")?.scrollIntoView({behavior:"smooth"}),250)}},[c,user,open]);
 useEffect(()=>onSnapshot(doc(db,"competitions",id),s=>s.exists()&&setC({id:s.id,...s.data()} as C)),[id]);
 useEffect(()=>{if(c&&!ready){setF({name:c.name,subhead:c.subhead??"",desc:c.description??"",start:c.startDate??"",end:c.endDate??"",mode:c.mode??"person",place:c.location??""});setReady(true)}},[c,ready]);
 const stages=useLive<Stage>(useMemo(()=>query(collection(db,"competitions",id,"stages"),orderBy("order")),[id])).d;
@@ -50,7 +51,7 @@ return(<div className="app">{back}{msg&&<p className="toast" role="alert" onClic
 {TXT.map(([k,l])=><div key={k}><Row label={t[l]} k={k}/>{open===k&&<div className="form">{k==="color"?<input type="color" value={/^#[0-9a-f]{6}$/i.test(draft)?draft:"#172B59"} onChange={e=>setDraft(e.target.value)}/>:<textarea rows={4} value={draft} onChange={e=>setDraft(e.target.value)}/>}<div className="acts"><button className="btn sm" onClick={()=>saveTxt(k)}>{t.save}</button>{k==="color"&&<button className="btn sm ghost" onClick={()=>upd({color:""}).then(()=>setOpen(""))}>{t.del}</button>}</div></div>}</div>)}
 <Row label={t.attach} k="attach" soon/>
 <p className="sec" style={{marginTop:28}}>{t.tournament}</p>
-<Row label={t.players} k="players" count={players.length}/>{open==="players"&&<Players cid={id} uid={user.uid} t={t}/>}
+<span id="sec-players"/><Row label={t.players} k="players" count={players.length}/>{open==="players"&&<Players cid={id} uid={user.uid} t={t}/>}
 <Row label={t.teams} k="teams"/>{open==="teams"&&<Teams cid={id} uid={user.uid} t={t}/>}<Row label={t.groups} k="groups"/>{open==="groups"&&<Groups cid={id} t={t}/>}
 <Row label={t.stage} k="stages"/>{open==="stages"&&<div className="form">{stages.map(s=><div key={s.id} className="prow"><b className="grow">{s.name}</b><button className="ib sm" onClick={()=>renameStage(s)} aria-label={t.rename}>✎</button><button className="ib sm" onClick={()=>delStage(s)} aria-label={t.del}>🗑</button></div>)}<button className="btn sm" onClick={addStage}>+ {t.addStage}</button></div>}
 {SOON.map(k=><Row key={k} label={t[k]} k={k} soon/>)}

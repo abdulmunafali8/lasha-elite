@@ -238,3 +238,19 @@ td:last-child{font-weight:800;color:var(--navy)}
 /* table "+" panel */
 .halfpill{z-index:3}
 .tpanel{position:relative;z-index:2;margin-top:22px;padding-top:36px}
+
+/* ===== image picker dialog (camera / gallery / library) ===== */
+button.ipick{font:inherit;padding:0}
+.idlg-wrap{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.5);display:grid;place-items:center;padding:20px}
+.idlg{width:min(88vw,360px);max-height:80vh;overflow-y:auto;background:#fff;border-radius:28px;padding:24px 22px 14px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.idlg h3{margin:0 0 8px;font-size:1.6rem;font-weight:800;color:var(--navy)}
+.idlg .irow{display:flex;align-items:center;gap:18px;width:100%;padding:16px 4px;background:none;border:0;font:inherit;font-size:1.15rem;font-weight:700;color:var(--navy);text-align:left;cursor:pointer;border-radius:12px}
+.idlg .irow svg{color:var(--royal);flex:none}
+.idlg .irow:active{background:var(--bg)}
+.ihead{display:flex;align-items:center;gap:8px}.ihead h3{margin:0}.ihead .irow{width:auto;padding:8px}
+.igrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:12px 0}
+.igrid.wide{grid-template-columns:1fr}
+.ith{border:0;padding:0;background:#eef2fb;border-radius:14px;overflow:hidden;cursor:pointer;aspect-ratio:1}
+.ith.r{border-radius:50%}.ith.wide{aspect-ratio:3/1}
+.ith img{width:100%;height:100%;object-fit:cover;display:block}
+.ith:active{transform:scale(.96)}

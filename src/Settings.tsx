@@ -20,7 +20,7 @@ const {t}=useLang();const [user,setUser]=useState<User|null|undefined>(undefined
 const [f,setF]=useState({name:"",subhead:"",desc:"",start:"",end:"",mode:"person",place:""});const [ready,setReady]=useState(false);
 const [logo,setLogo]=useState<File|null>(null);const [cover,setCover]=useState<File|null>(null);const [busy,setBusy]=useState(false);const [open,setOpen]=useState(()=>{try{const v=sessionStorage.getItem("openSec")||"";sessionStorage.removeItem("openSec");return v}catch{return ""}});const jumped=useRef(false);const [draft,setDraft]=useState("");
 useEffect(()=>onAuthStateChanged(auth,setUser),[]);
-useEffect(()=>{if(open==="players"&&c&&user&&!jumped.current){jumped.current=true;setTimeout(()=>document.getElementById("sec-players")?.scrollIntoView({behavior:"smooth"}),250)}},[c,user,open]);
+useEffect(()=>{if(open&&c&&user&&!jumped.current){jumped.current=true;setTimeout(()=>document.getElementById("sec-"+open)?.scrollIntoView({behavior:"smooth"}),250)}},[c,user,open]);
 useEffect(()=>onSnapshot(doc(db,"competitions",id),s=>s.exists()&&setC({id:s.id,...s.data()} as C)),[id]);
 useEffect(()=>{if(c&&!ready){setF({name:c.name,subhead:c.subhead??"",desc:c.description??"",start:c.startDate??"",end:c.endDate??"",mode:c.mode??"person",place:c.location??""});setReady(true)}},[c,ready]);
 const stages=useLive<Stage>(useMemo(()=>query(collection(db,"competitions",id,"stages"),orderBy("order")),[id])).d;
@@ -52,8 +52,8 @@ return(<div className="app">{back}{msg&&<p className="toast" role="alert" onClic
 <Row label={t.attach} k="attach" soon/>
 <p className="sec" style={{marginTop:28}}>{t.tournament}</p>
 <span id="sec-players"/><Row label={t.players} k="players" count={players.length}/>{open==="players"&&<Players cid={id} uid={user.uid} t={t}/>}
-<Row label={t.teams} k="teams"/>{open==="teams"&&<Teams cid={id} uid={user.uid} t={t}/>}<Row label={t.groups} k="groups"/>{open==="groups"&&<Groups cid={id} t={t}/>}
-<Row label={t.stage} k="stages"/>{open==="stages"&&<div className="form">{stages.map(s=><div key={s.id} className="prow"><b className="grow">{s.name}</b><button className="ib sm" onClick={()=>renameStage(s)} aria-label={t.rename}>✎</button><button className="ib sm" onClick={()=>delStage(s)} aria-label={t.del}>🗑</button></div>)}<button className="btn sm" onClick={addStage}>+ {t.addStage}</button></div>}
+<Row label={t.teams} k="teams"/>{open==="teams"&&<Teams cid={id} uid={user.uid} t={t}/>}<span id="sec-groups"/><Row label={t.groups} k="groups"/>{open==="groups"&&<Groups cid={id} t={t}/>}
+<span id="sec-stages"/><Row label={t.stage} k="stages"/>{open==="stages"&&<div className="form">{stages.map(s=><div key={s.id} className="prow"><b className="grow">{s.name}</b><button className="ib sm" onClick={()=>renameStage(s)} aria-label={t.rename}>✎</button><button className="ib sm" onClick={()=>delStage(s)} aria-label={t.del}>🗑</button></div>)}<button className="btn sm" onClick={addStage}>+ {t.addStage}</button></div>}
 {SOON.map(k=><Row key={k} label={t[k]} k={k} soon/>)}
 <p className="sec" style={{marginTop:28}}>{t.disclosure}</p>
 <label className="srow2 sp"><span className="ri"><Ic d={IC.website}/></span><span className="rl"><b>{t.priv}</b><br/><small className="muted">{t.privT}</small></span><input className="sw" type="checkbox" role="switch" checked={!!c.isPrivate} onChange={e=>upd({isPrivate:e.target.checked})}/></label>

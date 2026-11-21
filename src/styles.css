@@ -234,3 +234,7 @@ td:last-child{font-weight:800;color:var(--navy)}
 
 .tcw{position:relative;flex:none;cursor:pointer}
 .tcw .cam{position:absolute;right:-2px;bottom:-2px;width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-style:normal;font-size:1.1rem;line-height:1;border:2px solid #fff}
+
+/* table "+" panel */
+.halfpill{z-index:3}
+.tpanel{position:relative;z-index:2;margin-top:22px;padding-top:36px}

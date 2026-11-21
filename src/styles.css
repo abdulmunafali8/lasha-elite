@@ -254,3 +254,29 @@ button.ipick{font:inherit;padding:0}
 .ith.r{border-radius:50%}.ith.wide{aspect-ratio:3/1}
 .ith img{width:100%;height:100%;object-fit:cover;display:block}
 .ith:active{transform:scale(.96)}
+
+/* ===== teams / players list + edit dialog (Copa-style) ===== */
+.tadd{display:flex;gap:10px;align-items:center;margin:8px 0}
+.tadd input{flex:1;min-width:0;border:1.5px solid #b8c1d8;border-radius:10px;padding:14px;font-size:1.05rem}
+.tadd .btn{flex:none;height:48px;padding:0 22px;border-radius:24px}
+.ttot{margin:6px 2px 10px;font-weight:700;color:var(--mu)}
+.trow{display:flex;align-items:center;gap:14px;width:100%;padding:12px 4px;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;font:inherit;cursor:pointer}
+.trow:active{background:var(--bg)}
+.tav{width:56px;height:56px;border-radius:50%;border:3px solid #cbd5e1;display:grid;place-items:center;overflow:hidden;flex:none;font-weight:800;font-size:1rem;background:#eef2fb}
+.tav img{width:100%;height:100%;object-fit:cover;display:block}
+.trow .tn{display:block;font-size:1.2rem;font-weight:800;color:var(--navy)}
+.trow small{display:block;color:var(--mu);font-weight:600;margin-top:2px}
+.tgo{width:46px;height:46px;border-radius:50%;background:var(--bg);color:var(--navy);display:grid;place-items:center;flex:none}
+.tm-wrap{position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.5);display:grid;place-items:center;padding:16px}
+.tm{width:min(94vw,440px);max-height:90vh;overflow-y:auto;background:#fff;border-radius:24px;padding:10px 18px 18px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.tm-top{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:6px}
+.tm-x{background:none;border:0;font-size:1.5rem;color:var(--navy);padding:8px;cursor:pointer}
+.tm-id{display:flex;gap:14px;align-items:flex-start;margin-top:12px}
+.fld{position:relative;display:block;margin:18px 0 4px}
+.fld>span{position:absolute;top:-9px;left:12px;background:#fff;padding:0 6px;font-size:.82rem;font-weight:700;color:var(--mu);z-index:1}
+.fld input,.fld select{width:100%;border:1.5px solid #b8c1d8;border-radius:8px;padding:16px 14px;font-size:1.1rem;font-weight:700;color:var(--navy);background:#fff}
+.fld input:focus,.fld select:focus{border-color:var(--royal);outline:0}
+.tm-id .fld{flex:1;margin-top:22px}
+.tm-act{display:flex;align-items:center;justify-content:space-between;margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+.trem{background:none;border:0;color:#e53935;font-weight:800;font-size:1.3rem;cursor:pointer;padding:10px 6px}
+.btn.tsave{border-radius:28px;height:52px;padding:0 34px;font-size:1.25rem}

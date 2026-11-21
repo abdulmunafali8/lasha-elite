@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from "react";
+import {Fragment,useEffect,useMemo,useState} from "react";
 import {onAuthStateChanged,User} from "firebase/auth";
 import {collection,doc,query,orderBy,onSnapshot,addDoc,deleteDoc,updateDoc,writeBatch,serverTimestamp,arrayUnion,arrayRemove} from "firebase/firestore";
 import {auth,db} from "./firebase";import {useLang} from "./i18n";import {useLive} from "./hooks";
@@ -18,7 +18,7 @@ export default function CompetitionPage({id}:{id:string}){
 const {t}=useLang();const [user,setUser]=useState<User|null>(null);const [c,setC]=useState<Competition&{status?:string;isPrivate?:boolean;color?:string;website?:string;subhead?:string;description?:string}|null>(null);const [missing,setMissing]=useState(false);
 const [tab,setTab]=useState<Tab>("home");const [stageId,setStageId]=useState("");const [roundId,setRoundId]=useState("");
 const [rk,setRk]=useState<"scorers"|"assists"|"penalties"|"gk">("scorers");const [rs,setRs]=useState("");
-const [adding,setAdding]=useState(false);const [gen,setGen]=useState(false);const [br,setBr]=useState(false);const [editing,setEditing]=useState("");const [msg,setMsg]=useState("");const [mo,setMo]=useState(false);const [ex,setEx]=useState(false);const [needP,setNeedP]=useState(false);const [tp,setTp]=useState(false);const [gp,setGp]=useState(false);
+const [adding,setAdding]=useState(false);const [gen,setGen]=useState(false);const [br,setBr]=useState(false);const [editing,setEditing]=useState("");const [msg,setMsg]=useState("");const [mo,setMo]=useState(false);const [ex,setEx]=useState(false);const [needP,setNeedP]=useState(false);const [tp,setTp]=useState(false);const [gp,setGp]=useState(false);const [rsOpen,setRsOpen]=useState(false);
 useEffect(()=>onAuthStateChanged(auth,setUser),[]);
 useEffect(()=>onSnapshot(doc(db,"competitions",id),s=>s.exists()?setC({id:s.id,...s.data()} as never):setMissing(true),()=>setMissing(true)),[id]);
 const col=(n:string)=>query(collection(db,"competitions",id,n),orderBy(n==="matches"?"createdAt":"order"));
@@ -64,7 +64,23 @@ return(<div className="app">
 {owner&&!sRounds.length&&<div className="empty"><button className="btn" onClick={()=>players.length<2?setNeedP(true):setGen(true)}>{t.gen}</button><p>{t.or}</p><button className="btn" onClick={addRound}>{t.addRound}</button></div>}
 {gen&&owner&&stageId&&<Generate cid={id} stageId={stageId} players={players} hasMatches={stageMatches.length>0} allMatches={matches} stages={stages} groups={groups} t={t} onDone={()=>setGen(false)} onErr={setMsg}/>}
 {!stages.length&&<p className="muted">{t.pickRound}</p>}
-{matches.filter(m=>m.roundId===roundId).map(m=><MatchCard key={m.id} all={matches} m={m} owner={owner} open={editing===m.id} setOpen={o=>setEditing(o?m.id:"")} base={base} cid={id} t={t} onDel={()=>del(`${base}/matches/${m.id}`)} onErr={setMsg}/>)}
+{(()=>{const cur=sRounds.find(r=>r.id===roundId);const rm=matches.filter(m=>m.roundId===roundId);const list=cur?.ko?[...rm].sort((a,b)=>(a.slot??0)-(b.slot??0)):rm;
+const done=rm.filter(m=>m.status==="done"&&m.homeScore!=null&&m.awayScore!=null);const sum=(f:(m:Match)=>number)=>done.reduce((s,m)=>s+f(m),0);
+const goals=sum(m=>(m.homeScore??0)+(m.awayScore??0));const draws=done.filter(m=>m.homeScore===m.awayScore).length;
+const nm=(r:number)=>sRounds.find(x=>x.id===`${stageId}_r${r}`)?.name??`${t.round} ${r}`;const enUi=t.lang==="Hausa";
+const place=(n:number)=>enUi?`${n}${n%100>=11&&n%100<=13?"th":(["th","st","nd","rd"][n%10]??"th")} ${t.kPlace}`:`${t.kPlace} ${n}`;
+const hdr=(m:Match)=>{if(m.third)return t.third;if(!m.ko)return groups.find(g=>g.id===m.groupId)?.name??"";const r=m.rIdx??1,s=m.slot??0;
+if(r>1)return `${nm(r)} #${s+1} - ${nm(r-1)} #${2*s+1} X ${nm(r-1)} #${2*s+2}`;return `${nm(r)} #${s+1}`+(m.homeSeed&&m.awaySeed?` - ${place(m.homeSeed)} X ${place(m.awaySeed)}`:"")};
+const mini=(m:Match)=>{const r=m.rIdx??1,s=m.slot??0;const nx=matches.find(x=>x.id===`${m.stageId}_r${r+1}_s${s>>1}`);const d=nx?.status==="done";
+return<button type="button" key={"mn"+m.id} className="km" onClick={()=>setRoundId(`${m.stageId}_r${r+1}`)}><small>{nm(r+1)} #{(s>>1)+1} - {nm(r)} #{2*(s>>1)+1} X {nm(r)} #{2*(s>>1)+2}</small>
+<div className="kmr"><div className="side"><div className="cb"><Crest url={nx?.homeLogo} name={nx?.homeName||"?"}/></div><b>{nx?.homeName||t.tbd}</b></div>
+<div className={"score"+(d?"":" idle")}>{d?<><em className="chip">{t.closed}</em><b>{nx?.homeScore} : {nx?.awayScore}</b></>:"⋮"}</div>
+<div className="side"><div className="cb"><Crest url={nx?.awayLogo} name={nx?.awayName||"?"}/></div><b>{nx?.awayName||t.tbd}</b></div></div></button>};
+return<>{done.length>0&&<><div className="rst"><div><b>{done.length}</b><span>{t.games}</span></div><div><b>{draws}</b><span>{t.sDraws}</span></div><div><b>{goals}</b><span>{t.sGoals}</span></div><div><b>{(goals/done.length).toFixed(1)}</b><span>{t.sAvg}</span></div></div>
+<button type="button" className="rsb" aria-expanded={rsOpen} onClick={()=>setRsOpen(!rsOpen)}><Ic d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" s={20}/>{t.sRound}<Ic d={rsOpen?"M6 15l6-6 6 6":"M6 9l6 6 6-6"} s={20}/></button>
+{rsOpen&&<div className="rsx"><div><span>{t.assists}</span><b>{sum(m=>(m.homeAssists??0)+(m.awayAssists??0))}</b></div><div><span>{t.penalties}</span><b>{sum(m=>(m.homePens??0)+(m.awayPens??0))}</b></div><div><span>{t.cs}</span><b>{sum(m=>(m.homeScore===0?1:0)+(m.awayScore===0?1:0))}</b></div><div><span>{t.sTop}</span><b>{Math.max(...done.map(m=>(m.homeScore??0)+(m.awayScore??0)))}</b></div></div>}</>}
+{list.map(m=>{const s=m.slot??0;const ko=!!m.ko&&!m.third&&(m.rIdx??0)<(m.total??0);const sib=ko&&list.some(x=>x.id!==m.id&&!x.third&&x.slot===(s^1));const mn=ko?mini(m):null;
+return<Fragment key={m.id}>{ko&&s%2===1&&!sib?mn:null}<MatchCard all={matches} m={m} owner={owner} open={editing===m.id} setOpen={o=>setEditing(o?m.id:"")} base={base} cid={id} t={t} onDel={()=>del(`${base}/matches/${m.id}`)} onErr={setMsg} hdr={hdr(m)} conn={ko?(s%2===0?"cdn":"cup"):""} fin={!!m.ko&&(m.rIdx??0)===(m.total??0)} end={ko&&(s%2===1||!sib)}/>{ko&&s%2===0?mn:null}</Fragment>})}</>})()}
 {roundId&&!matches.some(m=>m.roundId===roundId)&&<p className="muted">{t.noMatches}</p>}
 
 </section>}
@@ -79,7 +95,7 @@ return(<div className="app">
 {ex&&<ExportMatches name={c.name} stages={stages} rounds={rounds} matches={matches} stageId={stageId} roundId={roundId} color={c.color} coverUrl={c.coverUrl} t={t} onClose={()=>setEx(false)} onMsg={setMsg}/>}
 </div>)}
 
-function MatchCard({all,m,owner,open,setOpen,base,cid,t,onDel,onErr}:{all:Match[];m:Match;owner:boolean;open:boolean;setOpen:(o:boolean)=>void;base:string;cid:string;t:Record<string,string>;onDel:()=>void;onErr:(s:string)=>void}){
+function MatchCard({all,m,owner,open,setOpen,base,cid,t,onDel,onErr,hdr,conn,fin,end}:{all:Match[];m:Match;owner:boolean;open:boolean;setOpen:(o:boolean)=>void;base:string;cid:string;t:Record<string,string>;onDel:()=>void;onErr:(s:string)=>void;hdr?:string;conn?:string;fin?:boolean;end?:boolean}){
 const [h,setH]=useState(String(m.homeScore??""));const [a,setA]=useState(String(m.awayScore??""));const [ha,setHa]=useState(String(m.homeAssists??""));const [aa,setAa]=useState(String(m.awayAssists??""));const [hp,setHp]=useState(String(m.homePens??""));const [ap,setAp]=useState(String(m.awayPens??""));
 const save=async()=>{const hn=Number(h),an=Number(a);if(h===""||a===""||!Number.isInteger(hn)||!Number.isInteger(an)||hn<0||an<0)return onErr(t.badScore);
 const st=[ha,aa,hp,ap].map(x=>x===""?0:Number(x));if(st.some(x=>!Number.isInteger(x)||x<0))return onErr(t.badScore);
@@ -89,18 +105,18 @@ const adv=!!m.ko&&(m.rIdx??0)<(m.total??0);const nr=(m.rIdx??0)+1,ns=(m.slot??0)
 const win=hn>an?{id:m.homeId,name:m.homeName,logo:m.homeLogo??null}:{id:m.awayId,name:m.awayName,logo:m.awayLogo??null};
 const nx=adv?all.find(x=>x.id===nid):undefined;
 if(nx?.status==="done"&&(sd==="home"?nx.homeId:nx.awayId)!==win.id)return onErr(t.lockedKO);
-const semi=!!m.ko&&(m.total??0)>=2&&m.rIdx===(m.total??0)-1;const lose=hn>an?{id:m.awayId,name:m.awayName,logo:m.awayLogo??null}:{id:m.homeId,name:m.homeName,logo:m.homeLogo??null};const tid=`${m.stageId}_third`;const t3=semi?all.find(x=>x.id===tid):undefined;
+const semi=!!m.ko&&(m.total??0)>=2&&m.rIdx===(m.total??0)-1&&((m.total??0)>2||all.filter(x=>x.ko&&!x.third&&x.rIdx===1).length>=2);const lose=hn>an?{id:m.awayId,name:m.awayName,logo:m.awayLogo??null}:{id:m.homeId,name:m.homeName,logo:m.homeLogo??null};const tid=`${m.stageId}_third`;const t3=semi?all.find(x=>x.id===tid):undefined;
 if(t3?.status==="done"&&(sd==="home"?t3.homeId:t3.awayId)!==lose.id)return onErr(t.lockedKO);
 const b=writeBatch(db);b.update(doc(db,base,"matches",m.id),{homeScore:hn,awayScore:an,homeAssists:st[0],awayAssists:st[1],homePens:st[2],awayPens:st[3],status:"done"});
 if(adv)b.set(doc(db,base,"matches",nid),{competitionId:cid,stageId:m.stageId,roundId:`${m.stageId}_r${nr}`,ko:true,slot:ns,rIdx:nr,total:m.total,...(nx?{}:{status:"upcoming",date:null,createdAt:serverTimestamp()}),[sd+"Id"]:win.id,[sd+"Name"]:win.name,[sd+"Logo"]:win.logo},{merge:true});
 if(semi)b.set(doc(db,base,"matches",tid),{competitionId:cid,stageId:m.stageId,roundId:`${m.stageId}_r${m.total}`,ko:true,third:true,slot:1,rIdx:m.total,total:m.total,...(t3?{}:{status:"upcoming",date:null,createdAt:serverTimestamp()}),[sd+"Id"]:lose.id,[sd+"Name"]:lose.name,[sd+"Logo"]:lose.logo},{merge:true});
 b.set(doc(collection(db,"activity")),{type:"result",homePlayer:m.homeName,awayPlayer:m.awayName,competitionId:cid,createdAt:serverTimestamp()});
 try{await b.commit();setOpen(false)}catch{onErr(t.err)}};
-return(<div className="mc"><button className="mrow" onClick={()=>owner&&m.homeId&&m.awayId&&setOpen(!open)}>
+return(<div className={"mc kc"+(conn?" "+conn:"")+(fin?" fin":"")+(end&&conn?" end":"")}>{hdr?<p className="kh">{hdr}</p>:null}<div className="kw"><button className="mrow" onClick={()=>owner&&m.homeId&&m.awayId&&setOpen(!open)}>
 <div className="side"><div className="cb"><Crest url={m.homeLogo} name={m.homeName||"?"}/></div><b>{m.homeName||t.tbd}</b></div>
 <div className={"score"+(m.status==="done"?"":" idle")}>{m.status==="done"?<><em className="chip">{t.closed}</em><b>{m.homeScore} : {m.awayScore}</b></>:"⋮"}</div>
-<div className="side"><div className="cb"><Crest url={m.awayLogo} name={m.awayName||"?"}/></div><b>{m.awayName||t.tbd}</b></div></button>
-{m.third&&<p className="muted ctr">🥉 {t.third}</p>}{m.date&&<p className="muted ctr">{new Date(m.date).toLocaleString()}</p>}
+<div className="side"><div className="cb"><Crest url={m.awayLogo} name={m.awayName||"?"}/></div><b>{m.awayName||t.tbd}</b></div></button>{conn?<i className="lnk" aria-hidden="true"/>:null}</div>
+{m.date&&<p className="muted ctr">{new Date(m.date).toLocaleString()}</p>}
 {open&&<div className="edit"><input type="number" min={0} inputMode="numeric" value={h} onChange={e=>setH(e.target.value)} aria-label={m.homeName}/><span>:</span><input type="number" min={0} inputMode="numeric" value={a} onChange={e=>setA(e.target.value)} aria-label={m.awayName}/>
 <div className="stat"><input type="number" min={0} inputMode="numeric" placeholder="0" value={ha} onChange={e=>setHa(e.target.value)} aria-label={t.assists+" "+m.homeName}/><span>{t.assists}</span><input type="number" min={0} inputMode="numeric" placeholder="0" value={aa} onChange={e=>setAa(e.target.value)} aria-label={t.assists+" "+m.awayName}/></div><div className="stat"><input type="number" min={0} inputMode="numeric" placeholder="0" value={hp} onChange={e=>setHp(e.target.value)} aria-label={t.penalties+" "+m.homeName}/><span>{t.penalties}</span><input type="number" min={0} inputMode="numeric" placeholder="0" value={ap} onChange={e=>setAp(e.target.value)} aria-label={t.penalties+" "+m.awayName}/></div><button className="btn sm" onClick={save}>{t.save}</button><button className="btn sm danger" onClick={onDel}>{t.del}</button></div>}</div>)}
 

@@ -308,3 +308,25 @@ button.ipick{font:inherit;padding:0}
 .gact:disabled{color:#a9b0c0;cursor:default}
 .g-foot{display:flex;justify-content:flex-end;border-top:1px solid #dfe3ec;padding-top:20px;margin-top:4px}
 .gsel{border:1.5px solid #b8c1d8;border-radius:10px;padding:10px 8px;font-size:1rem;font-weight:700;color:var(--navy);background:#fff;max-width:46%}
+
+/* Shafin Games irin Copa Fácil (knockout) */
+.kc{position:relative}.kh{margin:16px 0 4px;text-align:center;font-size:.7rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#8a93a8}
+.kw{position:relative}.kc.cdn .mrow,.kc.cup .mrow{width:76%}
+.kc .lnk{position:absolute;right:7%;width:11%;border:0 solid var(--navy)}
+.kc.cdn .lnk{top:50%;bottom:6px;border-top-width:2px;border-right-width:2px}
+.kc.cup .lnk{top:6px;bottom:50%;border-bottom-width:2px;border-right-width:2px}
+.kc .lnk::after{content:"";position:absolute;right:-6px;border:5px solid transparent}
+.kc.cdn .lnk::after{bottom:-3px;border-top:8px solid var(--navy);border-bottom:0}
+.kc.cup .lnk::after{top:-3px;border-bottom:8px solid var(--navy);border-top:0}
+.kc.end{margin-bottom:84px}
+.kc.fin .cb{width:96px;height:96px}.kc.fin .side b{font-size:1.15rem}
+.km{display:block;margin:2px 0 0 auto;width:48%;background:none;border:0;padding:0;font:inherit;color:inherit;text-align:center;cursor:pointer}
+.km small{display:block;font-size:.56rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8a93a8;margin-bottom:4px}
+.kmr{display:flex;align-items:center}.km .cb{width:46px;height:46px}.km .side b{font-size:.72rem}
+.km .score{min-width:56px;font-size:1.5rem;gap:3px}.km .chip{font-size:.52rem;padding:2px 8px}
+.rst{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:10px 0 0}
+.rst>div{text-align:center;padding:12px 2px;border-right:1px solid var(--line)}.rst>div:last-child{border-right:0}
+.rst b{display:block;font-size:2.3rem;font-weight:800;color:var(--navy);line-height:1.1}
+.rst span{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#8a93a8;font-weight:700}
+.rsb{display:flex;align-items:center;gap:8px;margin:14px auto;background:none;border:0;font:inherit;font-size:1.2rem;font-weight:800;color:var(--navy);cursor:pointer}
+.rsx{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:0 0 10px}.rsx>div{background:var(--bg);border-radius:12px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-weight:700;color:var(--navy)}.rsx span{color:var(--mu);font-weight:600;font-size:.85rem}

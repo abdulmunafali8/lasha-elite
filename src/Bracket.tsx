@@ -1,6 +1,6 @@
 import {Round,Match} from "./types";
 export default function Bracket({rounds,matches,t}:{rounds:Round[];matches:Match[];t:Record<string,string>}){
-const ko=rounds.filter(r=>r.ko);const R=ko.length;const fin=matches.find(m=>m.ko&&m.rIdx===R&&m.status==="done");
+const ko=rounds.filter(r=>r.ko);const R=ko.length;const fin=matches.find(m=>m.ko&&!m.third&&m.rIdx===R&&m.status==="done");
 const third=matches.find(x=>x.third);const champ=fin?((fin.homeScore??0)>(fin.awayScore??0)?fin.homeName:fin.awayName):"";
 return(<div><div className="bk">{ko.map((r,i)=><div key={r.id} className="bkc"><h4>{r.name}</h4><div className="bkl">
 {Array.from({length:2**(R-1-i)},(_,s)=>{const m=matches.find(x=>x.roundId===r.id&&x.slot===s);const d=m?.status==="done";

@@ -4,19 +4,19 @@ import {db} from "./firebase";import {Player,Match,Stage} from "./types";import 
 export default function Generate({cid,stageId,players,hasMatches,allMatches,stages,groups,t,onDone,onErr}:{cid:string;stageId:string;players:Player[];hasMatches:boolean;allMatches:Match[];stages:Stage[];groups:{id:string}[];t:Record<string,string>;onDone:()=>void;onErr:(s:string)=>void}){
 const [fmt,setFmt]=useState("single");const [src,setSrc]=useState("");const [topN,setTopN]=useState(2);const [busy,setBusy]=useState(false);
 const fields=(by:Map<string,Player>,h:string,a:string)=>{const H=by.get(h)!,A=by.get(a)!;return{homeId:h,awayId:a,homeName:H.name,awayName:A.name,homeLogo:H.logoUrl??null,awayLogo:A.logoUrl??null}};
-const goKO=async(slots:string[][],size:number,by:Map<string,Player>)=>{const R=Math.log2(size);
+const goKO=async(slots:string[][],size:number,by:Map<string,Player>,seedOf?:Map<string,number>)=>{const R=Math.log2(size);
 const nm=(r:number)=>{const n=size/2**(r-1);return n===2?t.final:n===4?t.sf:n===8?t.qf:n===16?t.ro16:`${t.round} ${r}`};
 if(!confirm(t.genConfirm))return;const b=writeBatch(db);const mc=(id:string)=>doc(db,"competitions",cid,"matches",id);setBusy(true);
 try{for(let r=1;r<=R;r++)b.set(doc(db,"competitions",cid,"rounds",`${stageId}_r${r}`),{stageId,name:nm(r),order:r,ko:true});
 const common={competitionId:cid,stageId,ko:true,total:R,status:"upcoming",date:null,createdAt:serverTimestamp()};
-slots.forEach((sl,s)=>{if(sl.length===2)b.set(mc(`${stageId}_r1_s${s}`),{...common,...fields(by,sl[0],sl[1]),roundId:`${stageId}_r1`,slot:s,rIdx:1},{merge:true});
+slots.forEach((sl,s)=>{if(sl.length===2)b.set(mc(`${stageId}_r1_s${s}`),{...common,...fields(by,sl[0],sl[1]),...(seedOf?{homeSeed:seedOf.get(sl[0])??null,awaySeed:seedOf.get(sl[1])??null}:{}),roundId:`${stageId}_r1`,slot:s,rIdx:1},{merge:true});
 else if(R>=2){const P=by.get(sl[0])!,sd=s%2===0?"home":"away";b.set(mc(`${stageId}_r2_s${s>>1}`),{...common,roundId:`${stageId}_r2`,slot:s>>1,rIdx:2,[sd+"Id"]:P.id,[sd+"Name"]:P.name,[sd+"Logo"]:P.logoUrl??null},{merge:true})}});
 await b.commit();onDone()}catch{onErr(t.err);setBusy(false)}};
 const goSeed=(by:Map<string,Player>)=>{const sm=allMatches.filter(m=>m.stageId===src);if(!src||!sm.length)return onErr(t.noSrc);if(sm.some(m=>m.status!=="done"))return onErr(t.notDone);
 const gl=groups.length?groups.map(g=>g.id):[""];
 const tops=gl.map(g=>standings(players.filter(p=>(p.groupId??"")===g),sm.filter(m=>(m.groupId??"")===g)).slice(0,topN).map(r=>r.id));
 const seeds:string[]=[];for(let r=0;r<topN;r++)for(const tp of tops)if(tp[r])seeds.push(tp[r]);
-if(seeds.length<2)return onErr(t.needPlayers);const q=seededSlots(seeds);return goKO(q.slots,q.size,by)};
+if(seeds.length<2)return onErr(t.needPlayers);const q=seededSlots(seeds);return goKO(q.slots,q.size,by,new Map(seeds.map((x,i)=>[x,i+1])))};
 const go=async()=>{
 if(players.length<2)return onErr(t.needPlayers);if(hasMatches)return onErr(t.hasMatches);
 const ids=players.map(p=>p.id);const by=new Map(players.map(p=>[p.id,p]));

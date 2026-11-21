@@ -51,7 +51,7 @@ return(<div className="gcard"><div className="g-head"><h2>{t.groups}</h2><button
 <button type="button" className="gact" disabled={off||busy} onClick={random}><Ic d={SHUFFLE}/><span>{t.gRand}</span></button>
 <button type="button" className="gact" disabled={off||busy} onClick={()=>open("set")}><Ic d={LINES}/><span>{t.gSet}</span></button>
 <button type="button" className="gact" disabled={off||busy} onClick={()=>open("name")}><b className="az">AZ</b><span>{t.gName}</span></button>
-{msg&&<p className="toast" role="alert">{msg}</p>}
+{msg&&<p className={"toast"+(msg===t.gSaved||msg===t.exCopied?" ok":"")} role="alert">{msg}</p>}
 <div className="g-foot"><button type="button" className="btn tsave" disabled={busy} onClick={save}>{busy?t.saving:t.save}</button></div>
 {panel==="set"&&<Assign cid={cid} t={t} players={players} groups={list} onClose={()=>setPanel(null)}/>}
 {panel==="name"&&<Rename cid={cid} t={t} groups={list} onClose={()=>setPanel(null)}/>}</div>)}

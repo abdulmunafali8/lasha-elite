@@ -367,3 +367,6 @@ tr.win td{background:#fff8dc}
 .mt-hint{color:#9aa3b5;font-weight:600;margin:4px 0 14px}
 .mt-btns{display:flex;gap:12px;margin-top:8px}.mt-btns>*{flex:1;height:54px;border-radius:27px;font:inherit;font-weight:800;font-size:1.05rem}
 .mt-go{background:var(--navy);color:#fff;border:0;cursor:pointer}.mt-go:disabled{opacity:.6}
+
+/* Saƙon nasara (kore) */
+.toast.ok{background:#e8f5e9;color:#1b5e20;border-left-color:#2e7d32}

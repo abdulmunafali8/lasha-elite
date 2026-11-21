@@ -280,3 +280,16 @@ button.ipick{font:inherit;padding:0}
 .tm-act{display:flex;align-items:center;justify-content:space-between;margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
 .trem{background:none;border:0;color:#e53935;font-weight:800;font-size:1.3rem;cursor:pointer;padding:10px 6px}
 .btn.tsave{border-radius:28px;height:52px;padding:0 34px;font-size:1.25rem}
+
+/* Shafin Teams irin Copa Fácil */
+.phead{display:flex;align-items:center;justify-content:space-between}.pact{display:flex;gap:2px}.pact button{background:none;border:0;color:var(--navy);padding:10px;border-radius:50%;cursor:pointer;display:grid;place-items:center}.pact button:active{background:var(--bg)}
+.tm-top{align-items:center}.tm-sh{background:#eef2fb;border:0;border-radius:50%;width:40px;height:40px;display:grid;place-items:center;color:var(--navy);cursor:pointer}
+.tm-id{align-items:center}.tm-id>*:first-child{flex:none}.tm-id .fld{margin-top:0;min-width:0}
+.tm-id .ipick{width:64px;height:76px;min-height:0;flex:none;border-radius:8px;font-size:.7rem;line-height:1.2;padding:0}
+.tm-grp{margin:16px 0 8px}.tm-grp select{border:1.5px solid #b8c1d8;border-radius:10px;padding:14px 12px;font-size:1.1rem;font-weight:700;color:var(--navy);background:#fff;min-width:50%}
+.tm-row{display:flex;align-items:center;gap:16px;width:100%;background:none;border:0;border-top:1px solid var(--line);padding:16px 8px;font:inherit;font-size:1.25rem;font-weight:800;color:var(--navy);text-align:left;cursor:pointer}.tm-row svg{color:var(--mu);flex:none}.tm-row .g{flex:1}.tm-row small{color:var(--mu);font-weight:700;font-size:1.05rem}
+.tm-more{padding-bottom:6px}
+.tm-h{margin:14px 0 6px;font-size:1.3rem;color:var(--navy)}
+.tm-li{display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid var(--line)}.tm-li .g{flex:1;min-width:0}.tm-li b{display:block;color:var(--navy)}.tm-li small{color:var(--mu);font-weight:600}
+.tm-del{background:none;border:0;color:#e53935;font-size:1.2rem;padding:8px;cursor:pointer}
+.tm-add{display:grid;gap:10px;margin:14px 0}.tm-add input{border:1.5px solid #b8c1d8;border-radius:10px;padding:14px;font-size:1.05rem;min-width:0}.tm-add .btn{height:46px;border-radius:24px}

@@ -39,7 +39,7 @@ return(<div className="app">
 <div className="dhead"><a className="dprof" href="#/signin" onClick={close}><span className="av">{user?.photoURL?<img src={user.photoURL} alt=""/>:<b>{ini}</b>}</span><span className="dn">{user?nm:t.btnIn}</span><Chev/></a></div>
 <div className="dbody">
 <p className="dsec">{t.tournaments}</p>
-<Item d={IC.trophy} label={t.organize} href={user?"#/new":"#/signin"} onClick={close}/>
+<Item d={IC.trophy} label={t.organize} href={user?"#/organize":"#/signin"} onClick={close}/>
 <Item d={IC.bookmark} label={t.follow} onClick={()=>go("follow")}/>
 <Item d={IC.users} label={t.orgsShort} onClick={()=>go("orgs")}/>
 <Item d={IC.link} label={t.openLink} onClick={openLink}/>

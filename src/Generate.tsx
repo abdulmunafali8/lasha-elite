@@ -28,12 +28,14 @@ const pg:[number[],number[],number[]][]=[[[14,15],[16,17],[0,1]],[[12,13],[18,19
 const tie:string[][]=[];for(const [sd,un,tp] of pg){const u=shuffle(un),to=shuffle(tp);tie[to[0]]=[r[sd[0]],r[u[0]]];tie[to[1]]=[r[sd[1]],r[u[1]]]}
 const slots:string[][]=[];for(const k of [0,6,2,4,1,7,3,5]){slots.push([r[k]]);slots.push(tie[k])}
 return goKO(slots,32,by,new Map(r.slice(0,24).map((x,i)=>[x,i+1])),{name:t.playoff,compact:true})};
-const commit=async(rounds:{name:string;pairs:[string,string,string][]}[],by:Map<string,Player>)=>{if(rounds.length+rounds.reduce((s,r)=>s+r.pairs.length,0)>450)return fail(t.tooMany);
+const commit=async(rounds:{name:string;pairs:[string,string,string][]}[],by:Map<string,Player>)=>{
+const ops:[ReturnType<typeof doc>,Record<string,unknown>][]=[];
+rounds.forEach((r,i)=>{const rr=doc(collection(db,"competitions",cid,"rounds"));ops.push([rr,{stageId,name:r.name,order:i+1}]);
+for(const [h,a,g] of r.pairs){const H=by.get(h)!,A=by.get(a)!;ops.push([doc(collection(db,"competitions",cid,"matches")),{competitionId:cid,stageId,roundId:rr.id,groupId:g||null,homeId:h,awayId:a,homeName:H.name,awayName:A.name,homeLogo:H.logoUrl??null,awayLogo:A.logoUrl??null,status:"upcoming",date:null,createdAt:serverTimestamp()}])}});
+if(ops.length>2000)return fail(t.tooMany);
 if(!confirm(t.genConfirm))return;
-const b=writeBatch(db);setBusy(true);
-try{rounds.forEach((r,i)=>{const rr=doc(collection(db,"competitions",cid,"rounds"));b.set(rr,{stageId,name:r.name,order:i+1});
-for(const [h,a,g] of r.pairs){const H=by.get(h)!,A=by.get(a)!;b.set(doc(collection(db,"competitions",cid,"matches")),{competitionId:cid,stageId,roundId:rr.id,groupId:g||null,homeId:h,awayId:a,homeName:H.name,awayName:A.name,homeLogo:H.logoUrl??null,awayLogo:A.logoUrl??null,status:"upcoming",date:null,createdAt:serverTimestamp()})}});
-await b.commit();onDone()}catch(x){fail(t.err+" ("+codeOf(x)+")");setBusy(false)}};
+setBusy(true);
+try{for(let i=0;i<ops.length;i+=450){const b=writeBatch(db);ops.slice(i,i+450).forEach(([ref,d])=>b.set(ref,d));await b.commit()}onDone()}catch(x){fail(t.err+" ("+codeOf(x)+")");setBusy(false)}};
 const go=async()=>{setErr("");
 if(players.length<2)return fail(t.needPlayers);if(hasMatches)return fail(t.hasMatches);
 const ids=players.map(p=>p.id);const by=new Map(players.map(p=>[p.id,p]));
@@ -42,7 +44,7 @@ if(fmt==="seed")return goSeed(by);if(fmt==="seedAll")return goSeedAll(by);if(fmt
 if(fmt==="league"){const maxR=ids.length%2?ids.length:ids.length-1;if(perTeam<1||perTeam>maxR)return fail(t.leagueMax+" "+maxR);
 return commit(leaguePhase(ids,perTeam,id=>by.get(id)?.groupId??"").map((r,i)=>({name:`${t.round} ${i+1}`,pairs:r.map(([h,a])=>[h,a,""] as [string,string,string])})),by)}
 const gm=new Map<string,string[]>();players.forEach(p=>gm.set(p.groupId??"",[...(gm.get(p.groupId??"")??[]),p.id]));
-if(gm.size>1&&gm.has(""))return fail(t.needGroups+" ("+(gm.get("")?.length??0)+" / "+players.length+")");const small=[...gm.values()].filter(v=>v.length<2).length;if(small)return fail(t.needPlayers+" ("+small+")");
+if((gm.size>1||groups.length>0)&&gm.has(""))return fail(t.needGroups+" ("+(gm.get("")?.length??0)+" / "+players.length+")");const small=[...gm.values()].filter(v=>v.length<2).length;if(small)return fail(t.needPlayers+" ("+small+")");
 const per=[...gm.entries()].map(([g,v])=>({g,r:roundRobin(v,fmt==="double")}));
 const rounds=Array.from({length:Math.max(...per.map(x=>x.r.length))},(_,i)=>({name:`${t.round} ${i+1}`,pairs:per.flatMap(x=>(x.r[i]??[]).map(([h,a])=>[h,a,x.g] as [string,string,string]))}));
 return commit(rounds,by)};

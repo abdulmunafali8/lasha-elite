@@ -402,3 +402,9 @@ button.tcw{border:0;background:none;padding:0}
 .pm-rm{background:none;border:0;color:#f44336;font-weight:800;font-size:1.4rem;padding:6px 4px;cursor:pointer}
 .pm-save{background:var(--navy);color:#fff;border:0;border-radius:999px;padding:14px 38px;font-weight:800;font-size:1.3rem;cursor:pointer}
 .pm-save:disabled{opacity:.6}
+
+/* teams list: whole row opens the editor; visible toolbar buttons */
+button.trow{width:100%;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;font:inherit;color:inherit;cursor:pointer}
+.tn small{display:block;margin-top:2px;font-size:.9rem}
+.tch{margin-left:auto;font-style:normal;font-size:1.8rem;color:#98a2b8;padding:0 4px}
+.tbtn{width:40px;height:40px;border-radius:50%;border:0;background:#eef1f7;color:var(--navy);display:grid;place-items:center;font-size:1.5rem;line-height:1;cursor:pointer}

@@ -10,14 +10,14 @@ export default function Players({cid,uid,t}:{cid:string;uid:string;t:Record<stri
 const list=useLive<P>(useMemo(()=>query(collection(db,"competitions",cid,"players"),orderBy("name")),[cid])).d;
 const teams=useLive<N>(useMemo(()=>query(collection(db,"competitions",cid,"teams"),orderBy("name")),[cid])).d;const groups=useLive<N>(useMemo(()=>query(collection(db,"competitions",cid,"groups"),orderBy("order")),[cid])).d;
 const [teamId,setTeamId]=useState("");const [groupId,setGroupId]=useState("");const [edit,setEdit]=useState<P|null>(null);const [open,setOpen]=useState(false);const [name,setName]=useState("");const [tag,setTag]=useState("");const [phone,setPhone]=useState("");const [logo,setLogo]=useState<File|null>(null);const [msg,setMsg]=useState("");const [busy,setBusy]=useState(false);
-const [src,setSrc]=useState<P|"form"|null>(null);const lp=useMemo(()=>logo?URL.createObjectURL(logo):"",[logo]);useEffect(()=>()=>{if(lp)URL.revokeObjectURL(lp)},[lp]);
+const [src,setSrc]=useState<"form"|null>(null);const lp=useMemo(()=>logo?URL.createObjectURL(logo):"",[logo]);useEffect(()=>()=>{if(lp)URL.revokeObjectURL(lp)},[lp]);
 const [qn,setQn]=useState("");const [qm,setQm]=useState("");const fr=useRef<HTMLFormElement>(null);
 useEffect(()=>{if(open)setTimeout(()=>fr.current?.scrollIntoView({behavior:"smooth",block:"center"}),80)},[open,edit]);
 const quickAdd=async(e:React.FormEvent)=>{e.preventDefault();const n=qn.trim();setQm("");if(n.length<2)return setQm(t.req+": "+t.playerName);if(list.some(p=>p.name.toLowerCase()===n.toLowerCase()))return setQm(t.playerName+"?");setBusy(true);try{await addDoc(collection(db,"competitions",cid,"players"),{name:n,gamertag:"",phone:"",teamId:null,teamName:null,groupId:null,ownLogo:null,logoUrl:null,createdAt:Date.now()});setQn("")}catch{setQm(t.err)}finally{setBusy(false)}};
-const pick=async(p:P,f?:File)=>{if(!f)return;setBusy(true);setQm("");try{const url=await uploadImg(`competitions/${uid}/${cid}/players/${p.id}`,f);await updateDoc(doc(db,"competitions",cid,"players",p.id),{ownLogo:url,logoUrl:url,teamId:null,teamName:null})}catch(x){setQm(t.err+" ("+((x as {code?:string})?.code??"?")+")")}finally{setBusy(false)}};
-const gotFile=(f:File)=>{if(src==="form"){setLogo(f);setTeamId("")}else if(src)void pick(src,f)};
-const badImg=()=>src==="form"?setMsg(t.imgBad):setQm(t.imgBad);
-const gotLib=(id:string)=>{const x=teams.find(z=>z.id===id);if(!x)return;if(src==="form")setTeamId(id);else if(src)void updateDoc(doc(db,"competitions",cid,"players",src.id),{teamId:id,teamName:x.name,logoUrl:x.logoUrl??null}).catch(()=>setQm(t.err))};
+
+const gotFile=(f:File)=>{setLogo(f);setTeamId("")};
+const badImg=()=>setMsg(t.imgBad);
+const gotLib=(id:string)=>{if(teams.some(z=>z.id===id)){setTeamId(id);setLogo(null)}};
 const prev=logo?lp:teams.find(x=>x.id===teamId)?.logoUrl??edit?.logoUrl;
 const delAll=()=>{if(confirm(t.sure))list.forEach(p=>void deleteDoc(doc(db,"competitions",cid,"players",p.id)))};
 const start=(p:P|null)=>{setEdit(p);setName(p?.name??"");setTag(p?.gamertag??"");setPhone(p?.phone??"");setTeamId(p?.teamId??"");setGroupId(p?.groupId??"");setLogo(null);setMsg("");setOpen(true)};
@@ -31,7 +31,7 @@ await updateDoc(ref,data);setOpen(false)}catch{setMsg(t.err)}finally{setBusy(fal
 const del=(p:P)=>confirm(t.sure)&&deleteDoc(doc(db,"competitions",cid,"players",p.id));
 return(<div className="pad"><form className="qadd" onSubmit={quickAdd} noValidate><input value={qn} onChange={e=>setQn(e.target.value)} placeholder={t.playerName} aria-label={t.playerName}/><button className="btn sm" disabled={busy}>{t.qAdd}</button></form>
 {qm&&<p className="toast" role="alert">{qm}</p>}
-<div className="tot"><span>{t.qTotal}: {list.length}</span><span className="tact"><button type="button" className="ib sm" onClick={()=>start(null)} aria-label={t.addPlayer}>+</button>{list.length>0&&<button type="button" className="ib sm" onClick={delAll} aria-label={t.del}><Ic d={IC.trash}/></button>}</span></div>
+<div className="tot"><span>{t.qTotal}: {list.length}</span><span className="tact"><button type="button" className="tbtn" onClick={()=>start(null)} aria-label={t.addPlayer}>+</button>{list.length>0&&<button type="button" className="tbtn" onClick={delAll} aria-label={t.del}><Ic d={IC.trash}/></button>}</span></div>
 {open&&createPortal(<div className="exscrim" onClick={()=>setOpen(false)}><form ref={fr} className="pm" onSubmit={save} noValidate onClick={e=>e.stopPropagation()}>
 <div className="pm-top"><button type="button" className="pm-x" aria-label={t.cancel} onClick={()=>setOpen(false)}>✕</button><button type="button" className="pm-sh" aria-label={t.share} onClick={()=>{if(navigator.share)void navigator.share({title:name,text:name}).catch(()=>{})}}><Ic d={IC.share}/></button></div>
 <div className="pm-row"><button type="button" className="logobox" onClick={()=>setSrc("form")} aria-label={t.logo}>{prev?<img src={prev} alt=""/>:<><b>+</b><small>200x240</small></>}</button><label className="fl"><span>{t.playerName}</span><input value={name} onChange={e=>setName(e.target.value)}/></label></div>
@@ -41,4 +41,4 @@ return(<div className="pad"><form className="qadd" onSubmit={quickAdd} noValidat
 {msg&&<p className="toast" role="alert">{msg}</p>}
 <div className="pm-foot">{edit?<button type="button" className="pm-rm" onClick={()=>{if(confirm(t.sure)){void del(edit);setOpen(false)}}}>{t.del}</button>:<span/>}<button className="pm-save" disabled={busy}>{busy?t.saving:t.save}</button></div></form></div>,document.body)}
 {src&&<ImageSource t={t} library={teams.filter(x=>x.logoUrl)} onFile={gotFile} onBad={badImg} onLibrary={gotLib} onClose={()=>setSrc(null)}/>}
-{list.map(p=><div key={p.id} className="trow"><button type="button" className="tcw" onClick={()=>setSrc(p)} aria-label={t.logo} disabled={busy}><span className={"tcr"+(p.logoUrl?" img":"")}>{p.logoUrl?<img src={p.logoUrl} alt=""/>:p.name.slice(0,2).toUpperCase()}</span><i className="cam">+</i></button><div className="grow tn"><b>{p.name}</b>{p.gamertag&&<p className="muted">{p.gamertag}</p>}</div><button type="button" className="ib sm" onClick={()=>start(p)} aria-label={t.edit}><Ic d={IC.edit}/></button><button type="button" className="ib sm" onClick={()=>del(p)} aria-label={t.del}><Ic d={IC.trash}/></button></div>)}</div>)}
+{list.map(p=><button type="button" key={p.id} className="trow" onClick={()=>start(p)}><span className={"tcr"+(p.logoUrl?" img":"")}>{p.logoUrl?<img src={p.logoUrl} alt=""/>:p.name.slice(0,2).toUpperCase()}</span><span className="grow tn"><b>{p.name}</b>{p.gamertag&&<small className="muted">{p.gamertag}</small>}</span><i className="tch">›</i></button>)}</div>)}

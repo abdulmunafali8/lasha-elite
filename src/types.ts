@@ -3,5 +3,8 @@ export interface Organizer{id:string;name:string;logoUrl?:string;country:string;
 export interface Activity{id:string;type:"result";homePlayer:string;awayPlayer:string;competitionId:string;createdAt:{toMillis():number}}
 export interface Stage{id:string;name:string;order:number}
 export interface Round{id:string;stageId:string;name:string;order:number;ko?:boolean}
-export interface Player{id:string;name:string;logoUrl?:string;teamId?:string|null;groupId?:string|null;ownLogo?:string|null}
-export interface Match{id:string;competitionId:string;stageId:string;roundId:string;homeId:string;awayId:string;homeName:string;awayName:string;homeLogo?:string;awayLogo?:string;homeScore?:number;awayScore?:number;status:"upcoming"|"done";date?:string;homeAssists?:number;awayAssists?:number;homePens?:number;awayPens?:number;groupId?:string|null;ko?:boolean;third?:boolean;homeSeed?:number|null;awaySeed?:number|null;slot?:number;rIdx?:number;total?:number}
+export interface Player{id:string;name:string;logoUrl?:string;teamId?:string|null;groupId?:string|null;ownLogo?:string|null;squad?:{name:string;role?:string}[];staff?:{name:string;role?:string}[]}
+export interface Match{id:string;competitionId:string;stageId:string;roundId:string;homeId:string;awayId:string;homeName:string;awayName:string;homeLogo?:string;awayLogo?:string;homeScore?:number;awayScore?:number;status:"upcoming"|"live"|"done";date?:string;homeAssists?:number;awayAssists?:number;homePens?:number;awayPens?:number;groupId?:string|null;ko?:boolean;third?:boolean;homeSeed?:number|null;awaySeed?:number|null;venue?:string|null;homeSheet?:SheetRow[];awaySheet?:SheetRow[];homeSubs?:number;awaySubs?:number;moves?:Move[];refNotes?:string[];slot?:number;rIdx?:number;total?:number}
+export interface SheetRow{n:string;on?:boolean;st?:boolean;g?:number;y?:boolean;r?:boolean}
+export interface Move{id:string;min:number|null;type:"goal"|"yellow"|"red"|"sub"|"other";side:"home"|"away";name:string}
+export interface Post{id:string;kind:"news"|"photo";text:string;imageUrl?:string|null;authorName?:string;createdAt?:{toMillis():number}|null;likes?:string[];cc?:number}

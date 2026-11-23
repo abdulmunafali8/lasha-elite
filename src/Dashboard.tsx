@@ -1,4 +1,5 @@
 import {useEffect,useMemo,useState} from "react";
+import {Theme,getTheme,setTheme} from "./theme";
 import {onAuthStateChanged,User} from "firebase/auth";
 import {collection,doc,getDoc,query,where,orderBy,limit} from "firebase/firestore";
 import {auth,db} from "./firebase";import {useLang} from "./i18n";import {useLive} from "./hooks";
@@ -22,6 +23,7 @@ const orgs=useLive<Organizer>(useMemo(()=>query(collection(db,"organizers"),wher
 const nots=useLive<{id:string;createdAt?:{toMillis():number}}>(useMemo(()=>query(collection(db,"notifications"),orderBy("createdAt","desc"),limit(20)),[]));
 let seen=0;try{seen=Number(localStorage.getItem("seenN")||0)}catch{}
 const unread=nots.d.filter(n=>(n.createdAt?.toMillis()??0)>seen).length;
+const [th,setTh]=useState<Theme>(getTheme());const pickTheme=(x:Theme)=>{setTheme(x);setTh(x)};
 const close=()=>setMenu(false);const go=(id:string)=>{setMenu(false);setTimeout(()=>document.getElementById(id)?.scrollIntoView({behavior:"smooth"}),60)};
 const openLink=()=>{setMenu(false);const v=prompt(t.linkPrompt)?.trim();if(!v)return;const m=v.match(/#\/competition\/([A-Za-z0-9]+)/)??v.match(/^([A-Za-z0-9]{15,})$/);if(m)location.hash=`#/competition/${m[1]}`;else alert(t.linkBad)};
 const nm=(user?.displayName||user?.email||"").trim();const ini=nm?nm.slice(0,2).toUpperCase():"?";
@@ -39,12 +41,14 @@ return(<div className="app">
 <div className="dhead"><a className="dprof" href="#/signin" onClick={close}><span className="av">{user?.photoURL?<img src={user.photoURL} alt=""/>:<b>{ini}</b>}</span><span className="dn">{user?nm:t.btnIn}</span><Chev/></a></div>
 <div className="dbody">
 <p className="dsec">{t.tournaments}</p>
-<Item d={IC.trophy} label={t.organize} href={user?"#/organize":"#/signin"} onClick={close}/>
+<Item d={IC.trophy} label={t.organize} href={user?"#/new":"#/signin"} onClick={close}/>
 <Item d={IC.bookmark} label={t.follow} onClick={()=>go("follow")}/>
 <Item d={IC.users} label={t.orgsShort} onClick={()=>go("orgs")}/>
 <Item d={IC.link} label={t.openLink} onClick={openLink}/>
 <p className="dsec">{t.prefs}</p>
 <Item d={IC.globe} label={t.lang} onClick={toggle}/>
+<span className="dthl">{t.appTheme}</span>
+<div className="dtheme" role="group" aria-label={t.appTheme}>{(["light","dark","system"] as Theme[]).map(x=><button key={x} type="button" className={th===x?"on":""} aria-pressed={th===x} onClick={()=>pickTheme(x)}>{x==="light"?t.themeLight:x==="dark"?t.themeDark:t.themeSystem}</button>)}</div>
 <p className="dsec">{t.userSec}</p>
 <Item d={IC.bell} label={t.notifs} href="#/notifications" onClick={close} badge={unread}/>
 <Item d={IC.user} label={user?t.account:t.btnIn} href="#/signin" onClick={close}/>

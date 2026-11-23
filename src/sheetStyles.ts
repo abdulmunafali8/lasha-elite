@@ -20,7 +20,7 @@ const css=`
 .ms-card{margin:12px;background:#fff;border-radius:14px;box-shadow:0 2px 8px #0002;overflow:hidden}
 .ms-h{background:var(--navy);color:#fff;text-align:center;font-weight:800;font-size:1.2rem;padding:14px;text-transform:uppercase}
 .ms-score{display:flex;justify-content:center;align-items:flex-start;gap:24px;padding:14px 8px 4px;font-family:ui-monospace,"Courier New",monospace}
-.ms-score b{font-size:4.6rem;line-height:1;font-weight:900;color:#111}.ms-score i{font-style:normal;font-size:2.4rem;align-self:center;padding-bottom:30px}
+.ms-score{color:#111}.ms-score .dg{display:flex;gap:8px}.ms-score i{font-style:normal;font-size:2.4rem;align-self:center;padding-bottom:30px}
 .ms-col{display:grid;justify-items:center;gap:8px}.ms-pm{display:flex;gap:10px;font-family:system-ui,sans-serif}
 .ms-pm button{width:40px;height:40px;border-radius:50%;border:0;background:var(--navy);color:#fff;font-size:1.3rem;cursor:pointer}.ms-pm button:disabled{opacity:.35}
 .ms-clock{display:flex;align-items:center;justify-content:center;gap:14px;padding:6px 0 16px;color:var(--navy);font-weight:800;font-size:1.3rem}
@@ -47,6 +47,11 @@ const css=`
 .ms-form .r{display:flex;gap:8px}
 @media print{.ms-top>button,.ms-pm,.ms-add,.ms-sw,.ms-rs{display:none}}
 
+.mm-wrap{position:fixed;inset:0;background:#0007;z-index:80;display:grid;place-items:center;padding:20px}
+.mm{background:var(--navy);width:min(310px,88vw);border-radius:22px;overflow:hidden;color:#fff}
+.mm button{display:flex;gap:18px;align-items:center;width:100%;padding:18px 22px;background:none;border:0;color:#fff;font:inherit;font-size:1.15rem;font-weight:800;text-align:left;cursor:pointer}.mm button:disabled{opacity:.4;cursor:default}
+.mm .lt{background:#fff}.mm .lt button{color:#e57373}
+.mm-dg{background:#fff;border-radius:22px;padding:22px;width:min(360px,90vw);display:grid;gap:12px;color:var(--navy)}.mm-dg h3{margin:0}.mm-dg select{border:1.5px solid #b8c1d8;border-radius:10px;padding:12px;font:inherit;min-width:0}.mm-dg .r{display:flex;gap:10px;justify-content:flex-end}
 .md-pills{display:flex;gap:8px;margin:6px 0 4px}
 .md-post{background:#fff;border:1px solid var(--line);border-radius:18px;margin:12px 0;overflow:hidden}
 .md-ph{display:flex;gap:12px;padding:14px;align-items:center}.md-ph .av{width:44px;height:44px;border-radius:50%;overflow:hidden;flex:none;background:var(--bg);display:grid;place-items:center}

@@ -14,6 +14,9 @@ const mmss=(ms:number)=>{const s=Math.floor(ms/1000);return String(Math.floor(s/
 const Ic=({d,s=22}:{d:string;s?:number})=><svg viewBox="0 0 24 24" width={s} height={s} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d}/></svg>;
 const BACK="M19 12H5M12 5l-7 7 7 7";const PRINT="M6 9V3h12v6M6 18H4v-7h16v7h-2M7 14h10v7H7z";const WATCH="M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16M12 9v4l2.5 1.5M9.5 2h5";
 
+const SEG:Record<string,string>={a:"7,2 33,2 37,6 33,10 7,10 3,6",b:"32,10 36,6 40,10 40,31 36,35 32,31",c:"32,41 36,37 40,41 40,62 36,66 32,62",d:"7,62 33,62 37,66 33,70 7,70 3,66",e:"0,41 4,37 8,41 8,62 4,66 0,62",f:"0,10 4,6 8,10 8,31 4,35 0,31",g:"7,32 33,32 37,36 33,40 7,40 3,36"};
+const ON:Record<string,string>={"0":"abcdef","1":"bc","2":"abged","3":"abgcd","4":"fgbc","5":"afgcd","6":"afgedc","7":"abc","8":"abcdefg","9":"abcdfg"};
+const Digits=({v}:{v:number})=><span className="dg" aria-label={String(v)}>{String(v).split("").map((ch,i)=><svg key={i} viewBox="0 0 40 72" width="48" height="86" aria-hidden="true">{Object.keys(SEG).map(k=><polygon key={k} points={SEG[k]} fill="currentColor" opacity={(ON[ch]??"").includes(k)?1:0.09}/>)}</svg>)}</span>;
 export default function MatchSheet({m,all,players,base,owner,t,onClose,closeMatch,onErr}:{m:Match;all:Match[];players:Player[];base:string;owner:boolean;t:Record<string,string>;onClose:()=>void;closeMatch:(hn:number,an:number)=>Promise<string|null>;onErr:(s:string)=>void}){
 const x=m as X;const status=m.status as string;const done=status==="done";const live=status==="live";
 const [now,setNow]=useState(Date.now());const [msg,setMsg]=useState("");
@@ -64,8 +67,8 @@ return createPortal(<div className="ms" role="dialog" aria-modal="true">
 <button type="button" aria-label="Print" onClick={()=>window.print()}><Ic d={PRINT}/></button></div>
 {msg&&<p className="toast" role="alert" onClick={()=>setMsg("")}>{msg}</p>}
 <div className="ms-card"><div className="ms-h">{t.scoreT}</div>
-<div className="ms-score"><div className="ms-col"><b>{done||live||m.homeScore!=null?sc("home"):0}</b>{canEdit&&<div className="ms-pm"><button type="button" aria-label="−" onClick={()=>bump("home",-1)}>−</button><button type="button" aria-label="+" onClick={()=>bump("home",1)}>+</button></div>}</div><i>×</i>
-<div className="ms-col"><b>{done||live||m.awayScore!=null?sc("away"):0}</b>{canEdit&&<div className="ms-pm"><button type="button" aria-label="−" onClick={()=>bump("away",-1)}>−</button><button type="button" aria-label="+" onClick={()=>bump("away",1)}>+</button></div>}</div></div>
+<div className="ms-score"><div className="ms-col"><Digits v={sc("home")}/>{canEdit&&<div className="ms-pm"><button type="button" aria-label="−" onClick={()=>bump("home",-1)}>−</button><button type="button" aria-label="+" onClick={()=>bump("home",1)}>+</button></div>}</div><i>×</i>
+<div className="ms-col"><Digits v={sc("away")}/>{canEdit&&<div className="ms-pm"><button type="button" aria-label="−" onClick={()=>bump("away",-1)}>−</button><button type="button" aria-label="+" onClick={()=>bump("away",1)}>+</button></div>}</div></div>
 <div className="ms-clock"><span>{mmss(ms)}</span>{canEdit&&<button type="button" className={"ms-sw"+(cl.run?" on":"")} aria-label="Stopwatch" onClick={toggleClock}><Ic d={WATCH} s={26}/></button>}{canEdit&&!cl.run&&cl.base>0&&<button type="button" className="ms-rs" onClick={()=>patch({clock:{run:false,base:0,at:0}})}>{t.clockReset}</button>}</div></div>
 <div className="ms-card"><div className="ms-h">{t.subsT}</div><div className="ms-subs">{(["home","away"] as Side[]).map(s=><div key={s}><b>{s==="home"?m.homeName:m.awayName}</b><div className="ms-dots">{[0,1,2,3,4].map(i=><button type="button" key={i} className={i<((s==="home"?x.homeSubs:x.awaySubs)??0)?"on":""} disabled={!canEdit} aria-label={"sub "+(i+1)} onClick={()=>subs(s,i)}/>)}</div></div>)}</div></div>
 {team("home")}{team("away")}

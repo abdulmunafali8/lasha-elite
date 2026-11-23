@@ -21,7 +21,7 @@ export default function MatchSheet({m,all,players,base,owner,t,onClose,closeMatc
 const x=m as X;const status=m.status as string;const done=status==="done";const live=status==="live";
 const [now,setNow]=useState(Date.now());const [msg,setMsg]=useState("");
 const [mf,setMf]=useState(false);const [mSide,setMSide]=useState<Side>("home");const [mIc,setMIc]=useState("⚽");const [mText,setMText]=useState("");const [mMin,setMMin]=useState("");
-const [rf,setRf]=useState(false);const [rText,setRText]=useState("");
+const [rf,setRf]=useState(false);const [rText,setRText]=useState("");const [dd,setDd]=useState(false);const [mvF,setMvF]=useState<""|Side>("");
 const sc=(s:Side)=>(s==="home"?m.homeScore:m.awayScore)??0;
 const cl:Clock=x.clock??{run:false,base:0,at:0};
 useEffect(()=>{if(!(cl.run&&live))return;setNow(Date.now());const i=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(i)},[cl.run,live]);
@@ -47,15 +47,17 @@ const edit=(s:Side,i:number,what:"st"|"g+"|"g-"|"y"|"rd")=>{if(!canEdit)return;c
  if(what==="y"){ln.y=(ln.y+1)%3;if(ln.y===0)mv=dropMoves(mv,s,"🟨",ln.n,false);else mv.push({at:Date.now(),min:minNow(),side:s,ic:"🟨",text:ln.n})}
  if(what==="rd"){ln.rd=!ln.rd;if(ln.rd)mv.push({at:Date.now(),min:minNow(),side:s,ic:"🟥",text:ln.n});else mv=dropMoves(mv,s,"🟥",ln.n,false)}
  L[i]=ln;upd[s+"Lines"]=L;upd.moves=mv;if(("g+"===what||"g-"===what)&&status==="upcoming"){upd.status="live";upd[(s==="home"?"away":"home")+"Score"]=sc(s==="home"?"away":"home")}patch(upd)};
+const allSt=(s:Side)=>{if(!canEdit)return;const L=lines(s);if(!L.length)return;const on=!L.every(l=>l.st);patch({[s+"Lines"]:L.map(l=>({...l,st:on}))})};
 const subs=(s:Side,i:number)=>{if(!canEdit)return;const cur=(s==="home"?x.homeSubs:x.awaySubs)??0;patch({[s+"Subs"]:i+1===cur?cur-1:i+1})};
 const addMove=()=>{if(!canEdit&&!owner)return;const tx=mText.trim();if(!tx)return;const mn=mMin===""?minNow():Number(mMin);patch({moves:[...(x.moves??[]),{at:Date.now(),min:Number.isFinite(mn as number)?mn:null,side:mSide,ic:mIc,text:tx}]});setMText("");setMMin("");setMf(false)};
 const delMove=(at:number)=>owner&&patch({moves:(x.moves??[]).filter(q=>q.at!==at)});
 const addRef=()=>{const tx=rText.trim();if(!owner||!tx)return;patch({refs:[...(x.refs??[]),tx]});setRText("");setRf(false)};
 const delRef=(i:number)=>owner&&patch({refs:(x.refs??[]).filter((_,j)=>j!==i)});
 const label:Record<string,string>={done:t.closed,live:t.live,upcoming:t.notStarted};
-const moves=[...(x.moves??[])].sort((a,b)=>(a.min??999)-(b.min??999)||a.at-b.at);
+const cur=status==="done"||status==="live"?status:"upcoming";
+const moves=[...(x.moves??[])].sort((a,b)=>(a.min??999)-(b.min??999)||a.at-b.at).filter(q=>!mvF||q.side===mvF);
 const team=(s:Side)=>{const L=lines(s);const name=s==="home"?m.homeName:m.awayName;return<div className="ms-card" key={s}><div className="ms-h">{name}</div>
-<div className="ms-ph"><span>#</span><span>{t.tmSquad}</span><span>{t.starter}</span><span>⚽</span><span>🟨</span><span>🟥</span></div>
+<div className="ms-ph"><span>#</span><span className="pl">{t.tmSquad}<button type="button" className={"ms-ck"+(L.length>0&&L.every(l=>l.st)?" on":"")} disabled={!canEdit||L.length===0} aria-label={t.starter} onClick={()=>allSt(s)}>✓</button></span><span>{t.starter}</span><span>⚽</span><span className="ms-yc"/><span className="ms-rc"/></div>
 {L.length===0?<p className="ms-empty">{t.noSquad}</p>:L.map((l,i)=><div className="ms-pr" key={l.n+i}><span>{i+1}</span><span className="nm">{l.n}{l.r?<small>{l.r}</small>:null}</span>
 <button type="button" className={"ms-sw2"+(l.st?" on":"")} disabled={!canEdit} aria-label={t.starter} onClick={()=>edit(s,i,"st")}/>
 <span className="ms-g">{canEdit&&<button type="button" aria-label="−" onClick={()=>edit(s,i,"g-")}>−</button>}<b>{l.g}</b>{canEdit&&<button type="button" aria-label="+" onClick={()=>edit(s,i,"g+")}>+</button>}</span>
@@ -63,16 +65,16 @@ const team=(s:Side)=>{const L=lines(s);const name=s==="home"?m.homeName:m.awayNa
 <button type="button" className={"ms-cd"+(l.rd?" r":"")} disabled={!canEdit} aria-label="red" onClick={()=>edit(s,i,"rd")}/></div>)}</div>};
 return createPortal(<div className="ms" role="dialog" aria-modal="true">
 <div className="ms-top"><button type="button" aria-label="Back" onClick={onClose}><Ic d={BACK}/></button>
-<div className="ms-st">{owner?<select value={status==="done"||status==="live"?status:"upcoming"} onChange={e=>setStatus(e.target.value)} aria-label={t.sheetT}><option value="done">{label.done}</option><option value="live">{label.live}</option><option value="upcoming">{label.upcoming}</option></select>:<span>{label[status]??label.upcoming}</span>}</div>
+<div className="ms-st">{owner?<div className="ms-dd"><button type="button" className="ms-ddb" aria-haspopup="listbox" aria-expanded={dd} aria-label={t.sheetT} onClick={()=>setDd(!dd)}><span>{label[cur]}</span><svg viewBox="0 0 10 5" width="12" height="6" aria-hidden="true"><path d="M0 0h10L5 5z" fill="currentColor"/></svg></button>{dd&&<><div className="ms-ddx" onClick={()=>setDd(false)}/><div className="ms-ddm" role="listbox">{["done","live","upcoming"].map(k=><button type="button" role="option" aria-selected={cur===k} key={k} className={cur===k?"on":""} onClick={()=>{setDd(false);setStatus(k)}}>{label[k]}</button>)}</div></>}</div>:<span className="ms-ddb">{label[status]??label.upcoming}</span>}</div>
 <button type="button" aria-label="Print" onClick={()=>window.print()}><Ic d={PRINT}/></button></div>
 {msg&&<p className="toast" role="alert" onClick={()=>setMsg("")}>{msg}</p>}
 <div className="ms-card"><div className="ms-h">{t.scoreT}</div>
 <div className="ms-score"><div className="ms-col"><Digits v={sc("home")}/>{canEdit&&<div className="ms-pm"><button type="button" aria-label="−" onClick={()=>bump("home",-1)}>−</button><button type="button" aria-label="+" onClick={()=>bump("home",1)}>+</button></div>}</div><i>×</i>
 <div className="ms-col"><Digits v={sc("away")}/>{canEdit&&<div className="ms-pm"><button type="button" aria-label="−" onClick={()=>bump("away",-1)}>−</button><button type="button" aria-label="+" onClick={()=>bump("away",1)}>+</button></div>}</div></div>
-<div className="ms-clock"><span>{mmss(ms)}</span>{canEdit&&<button type="button" className={"ms-sw"+(cl.run?" on":"")} aria-label="Stopwatch" onClick={toggleClock}><Ic d={WATCH} s={26}/></button>}{canEdit&&!cl.run&&cl.base>0&&<button type="button" className="ms-rs" onClick={()=>patch({clock:{run:false,base:0,at:0}})}>{t.clockReset}</button>}</div></div>
+{(ms>0||cl.run)&&<div className="ms-clock"><span>{mmss(ms)}</span>{canEdit&&!cl.run&&cl.base>0&&<button type="button" className="ms-rs" onClick={()=>patch({clock:{run:false,base:0,at:0}})}>{t.clockReset}</button>}</div>}{canEdit&&<button type="button" className={"ms-sw"+(cl.run?" on":"")} aria-label="Stopwatch" onClick={toggleClock}><Ic d={WATCH} s={28}/></button>}</div>
 <div className="ms-card"><div className="ms-h">{t.subsT}</div><div className="ms-subs">{(["home","away"] as Side[]).map(s=><div key={s}><b>{s==="home"?m.homeName:m.awayName}</b><div className="ms-dots">{[0,1,2,3,4].map(i=><button type="button" key={i} className={i<((s==="home"?x.homeSubs:x.awaySubs)??0)?"on":""} disabled={!canEdit} aria-label={"sub "+(i+1)} onClick={()=>subs(s,i)}/>)}</div></div>)}</div></div>
 {team("home")}{team("away")}
-<div className="ms-card"><div className="ms-sec"><span>{t.movesT}</span>{owner&&<button type="button" className="ms-add" aria-label={t.qAdd} onClick={()=>setMf(!mf)}>+</button>}</div>
+<div className="ms-card"><div className="ms-sec"><span>{t.movesT}</span>{owner&&<button type="button" className="ms-add" aria-label={t.qAdd} onClick={()=>setMf(!mf)}>+</button>}<button type="button" className="ms-fl" aria-label="Filter" onClick={()=>setMvF(mvF===""?"home":mvF==="home"?"away":"")}>{mvF&&<small>{mvF==="home"?m.homeName:m.awayName}</small>}<Ic d="M3 6h18M6 12h12M10 18h4" s={26}/></button></div>
 {mf&&<div className="ms-form"><div className="r"><select value={mSide} onChange={e=>setMSide(e.target.value as Side)}><option value="home">{m.homeName}</option><option value="away">{m.awayName}</option></select><select value={mIc} onChange={e=>setMIc(e.target.value)}>{["⚽","🟨","🟥","🔁","📝"].map(i=><option key={i} value={i}>{i}</option>)}</select><input type="number" inputMode="numeric" min={0} placeholder="'" value={mMin} onChange={e=>setMMin(e.target.value)} style={{width:70}}/></div><input value={mText} placeholder={t.tmName} onChange={e=>setMText(e.target.value)}/><button type="button" className="btn sm" onClick={addMove}>{t.qAdd}</button></div>}
 {moves.map(q=><div className="ms-mv" key={q.at}><span className="mn">{q.min!=null?q.min+"'":"–"}</span><span>{q.ic}</span><span className="tx">{q.text} <small className="muted">({q.side==="home"?m.homeName:m.awayName})</small></span>{owner&&<button type="button" aria-label={t.del} onClick={()=>delMove(q.at)}>✕</button>}</div>)}
 <div className="ms-sec"><span>{t.refT}</span>{owner&&<button type="button" className="ms-add" aria-label={t.qAdd} onClick={()=>setRf(!rf)}>+</button>}</div>

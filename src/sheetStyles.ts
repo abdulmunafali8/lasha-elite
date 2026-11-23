@@ -21,6 +21,16 @@ const css=`
 .mo-p{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;color:#fff}.mo-p span{display:grid;gap:4px}.mo-p b{font-size:1.15rem}.mo-p small{font-size:1rem;opacity:.85}
 .mo-p input{width:26px;height:26px;flex:none;accent-color:#fff}
 .mo-acts{display:flex;align-items:center;justify-content:flex-end;gap:22px;margin-top:18px}.mo-rm{background:none;border:0;color:#ff4d3d;font:inherit;font-size:1.2rem;font-weight:800;cursor:pointer}
+.sh-wrap{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.55);display:flex;align-items:flex-end}
+.sh-sheet{background:#0f1a36;color:#fff;width:100%;border-radius:24px 24px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom) + 22px);box-sizing:border-box;max-height:92vh;overflow:auto}
+.sh-grab{display:block;width:44px;height:4px;border-radius:2px;background:#8fa0c8;margin:6px auto 18px}
+.sh-top{display:flex;align-items:center;justify-content:space-between}.sh-top h2{margin:0;font-size:1.8rem}
+.sh-x{background:none;border:0;color:#fff;font-size:1.5rem;padding:8px;cursor:pointer}
+.sh-qr{background:#fff;border-radius:20px;width:min(64vw,280px);margin:16px auto;padding:10px;box-sizing:border-box}.sh-qr svg{display:block;width:100%;height:auto}
+.sh-link{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #33446f;border-radius:16px;padding:16px;margin-bottom:12px}
+.sh-link a{color:#fff;font-weight:700;overflow-wrap:anywhere;text-decoration:underline;flex:1;text-align:center;font-size:1.05rem}
+.sh-link button{background:none;border:0;color:#fff;cursor:pointer;display:grid;place-items:center;padding:4px;font-size:1.3rem}
+.sh-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:1px solid #33446f;background:none;color:#fff;border-radius:999px;padding:14px;font:inherit;font-weight:800;font-size:1.15rem;cursor:pointer}
 .dtl{display:grid;gap:4px;width:100%;text-align:left}.dtl span{font-size:.78rem;font-weight:800;color:var(--mu);letter-spacing:.06em;text-transform:uppercase}
 .edit .dt input[type=datetime-local]{min-height:48px;color:inherit}
 .champ>div{display:grid;gap:2px;justify-items:start;min-width:0}.champ em{display:block}

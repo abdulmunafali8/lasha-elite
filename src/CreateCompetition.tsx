@@ -1,6 +1,6 @@
 import {useEffect,useState} from "react";
 import {onAuthStateChanged,User} from "firebase/auth";
-import {addDoc,collection,doc,getDoc,setDoc,serverTimestamp} from "firebase/firestore";
+import {addDoc,collection,doc,getDoc,setDoc,serverTimestamp} from "firebase/firestore";import {uniqueCode} from "./shortLink";
 import {auth,db,uploadImg} from "./firebase";import {useLang} from "./i18n";import ImagePick from "./ImagePick";
 export default function CreateCompetition(){
 const {t}=useLang();const [user,setUser]=useState<User|null|undefined>(undefined);const [ok,setOk]=useState<boolean|null>(null);
@@ -16,7 +16,7 @@ if(f.name.trim().length<3)return setMsg(t.req+": "+t.ctitle);
 if(f.start&&f.end&&f.end<f.start)return setMsg(t.endBefore);
 setBusy(true);try{const r=doc(collection(db,"competitions"));const base=`competitions/${user.uid}/${r.id}`;
 const [logoUrl,coverUrl]=await Promise.all([logo?uploadImg(`${base}/logo`,logo):null,cover?uploadImg(`${base}/cover`,cover):null]);
-await setDoc(r,{name:f.name.trim(),subhead:f.subhead.trim(),description:f.desc.trim(),startDate:f.start||null,endDate:f.end||null,mode:f.mode,location:f.mode==="person"?f.place.trim():"",isPrivate:f.priv,status:"prep",ownerId:user.uid,organizerName:user.displayName??"",logoUrl,coverUrl,followers:[],createdAt:serverTimestamp()});
+await setDoc(r,{shortCode:await uniqueCode(),name:f.name.trim(),subhead:f.subhead.trim(),description:f.desc.trim(),startDate:f.start||null,endDate:f.end||null,mode:f.mode,location:f.mode==="person"?f.place.trim():"",isPrivate:f.priv,status:"prep",ownerId:user.uid,organizerName:user.displayName??"",logoUrl,coverUrl,followers:[],createdAt:serverTimestamp()});
 await addDoc(collection(db,"competitions",r.id,"stages"),{name:`${t.stage} 1`,order:1});location.hash=`#/competition/${r.id}`}catch{setMsg(t.err);setBusy(false)}};
 return(<div className="app"><header className="ch"><div className="chr"><a className="ib" href="#/">←</a><h1>{t.createComp}</h1></div></header>
 <form className="form pad" onSubmit={submit} noValidate>

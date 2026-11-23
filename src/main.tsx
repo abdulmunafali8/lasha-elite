@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from "react";import {createRoot} from "react-dom/client";
-import Dashboard from "./Dashboard";import CompetitionPage from "./CompetitionPage";import Admin from "./Admin";import Notifications from "./Notifications";import Settings from "./Settings";import Auth from "./Auth";import CreateCompetition from "./CreateCompetition";import MyTournaments from "./MyTournaments";import "./styles.css";
+import Dashboard from "./Dashboard";import CompetitionPage from "./CompetitionPage";import Admin from "./Admin";import Notifications from "./Notifications";import Settings from "./Settings";import Auth from "./Auth";import CreateCompetition from "./CreateCompetition";import MyTournaments from "./MyTournaments";import ShortLink from "./ShortLink";import "./styles.css";
 
 class Boundary extends React.Component<{children:React.ReactNode},{err:Error|null}>{
 state:{err:Error|null}={err:null};
@@ -20,6 +20,7 @@ return()=>{removeEventListener("error",f);removeEventListener("unhandledrejectio
 return m?<p className="toast" role="alert" onClick={()=>setM("")}>{m}</p>:null}
 
 function route(h:string){
+const sl=h.match(/^#\/c\/([A-Za-z0-9]+)$/);if(sl)return<ShortLink key={sl[1]} code={sl[1].toLowerCase()}/>;
 const st=h.match(/^#\/competition\/([^/]+)\/settings/);if(st)return<Settings key={st[1]} id={st[1]}/>;
 const m=h.match(/^#\/competition\/([^/]+)/);
 if(h==="#/admin")return<Admin/>;if(h==="#/notifications")return<Notifications/>;if(h==="#/signin")return<Auth/>;if(h==="#/new")return<CreateCompetition/>;if(h==="#/organize")return<MyTournaments/>;

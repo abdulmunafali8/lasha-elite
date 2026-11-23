@@ -9,7 +9,8 @@ const css=`
 .lochd{display:flex;justify-content:space-between;align-items:center;font-weight:800;color:var(--mu);letter-spacing:.08em;text-transform:uppercase;font-size:.78rem}
 .lochd a{color:var(--royal);font-weight:800;text-decoration:none;text-transform:none;letter-spacing:0;font-size:.92rem}
 .locrow{display:flex;align-items:center;gap:12px;margin-top:10px;padding:12px;background:var(--bg);border-radius:14px;color:var(--navy);font-weight:700}
-.edit .dt{display:grid;gap:8px;margin:10px 0;width:100%}.edit .dt input{border:1.5px solid #b8c1d8;border-radius:10px;padding:10px;font:inherit}
+.edit .dt{display:grid;gap:8px;margin:10px 0;width:100%}.edit .dt input{width:100%;min-width:0;box-sizing:border-box;height:auto;text-align:left;border:1.5px solid #b8c1d8;border-radius:10px;padding:12px;font:inherit}
+.champ>div{display:grid;gap:2px;justify-items:start;min-width:0}.champ em{display:block}
 
 .ms{position:fixed;inset:0;z-index:75;background:#ededed;overflow-y:auto;color:var(--ink)}
 .ms-top{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 10px) 10px 10px;background:var(--navy);color:#fff}

@@ -11,7 +11,7 @@ const css=`
 .locrow{display:flex;align-items:center;gap:12px;margin-top:10px;padding:12px;background:var(--bg);border-radius:14px;color:var(--navy);font-weight:700}
 .edit .dt{display:grid;gap:8px;margin:10px 0;width:100%}.edit .dt input{width:100%;min-width:0;box-sizing:border-box;height:auto;text-align:left;border:1.5px solid #b8c1d8;border-radius:10px;padding:12px;font:inherit}
 .dtl{display:grid;gap:4px;width:100%;text-align:left}.dtl span{font-size:.78rem;font-weight:800;color:var(--mu);letter-spacing:.06em;text-transform:uppercase}
-.edit .dt input[type=datetime-local]{background:#fff;min-height:48px}
+.edit .dt input[type=datetime-local]{min-height:48px;color:inherit}
 .champ>div{display:grid;gap:2px;justify-items:start;min-width:0}.champ em{display:block}
 
 .ms{position:fixed;inset:0;z-index:75;background:#021426;overflow-y:auto;color:#fff;overscroll-behavior:contain}

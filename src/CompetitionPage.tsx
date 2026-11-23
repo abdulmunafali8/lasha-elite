@@ -24,8 +24,10 @@ useEffect(()=>onSnapshot(doc(db,"competitions",id),s=>s.exists()?setC({id:s.id,.
 const col=(n:string)=>query(collection(db,"competitions",id,n),orderBy(n==="matches"?"createdAt":"order"));
 const stages=useLive<Stage>(useMemo(()=>col("stages"),[id])).d;
 const rounds=useLive<Round>(useMemo(()=>col("rounds"),[id])).d;
-const matches=useLive<Match>(useMemo(()=>query(collection(db,"competitions",id,"matches"),orderBy("createdAt")),[id])).d;
+const matchesRaw=useLive<Match>(useMemo(()=>query(collection(db,"competitions",id,"matches"),orderBy("createdAt")),[id])).d;
 const players=useLive<Player>(useMemo(()=>query(collection(db,"competitions",id,"players"),orderBy("name")),[id])).d;
+// Tambarin ƙungiya koyaushe yana fitowa daga bayanan ƙungiyar na yanzu, ba daga kwafin da aka adana a wasa ba
+const matches=useMemo(()=>matchesRaw.map(m=>{const hl=players.find(p=>p.id===m.homeId)?.logoUrl,al=players.find(p=>p.id===m.awayId)?.logoUrl;return (hl&&hl!==m.homeLogo)||(al&&al!==m.awayLogo)?{...m,homeLogo:hl??m.homeLogo,awayLogo:al??m.awayLogo}:m}),[matchesRaw,players]);
 const groups=useLive<{id:string;name:string}>(useMemo(()=>query(collection(db,"competitions",id,"groups"),orderBy("order")),[id])).d;const [gid,setGid]=useState("");
 useEffect(()=>{if(!stageId&&stages[0])setStageId(stages[0].id)},[stages,stageId]);
 const sRounds=rounds.filter(r=>r.stageId===stageId);

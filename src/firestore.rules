@@ -1,0 +1,78 @@
+rules_version='2';
+service cloud.firestore{
+match /databases/{d}/documents{
+
+function admin(){
+  return request.auth!=null
+    &&exists(/databases/$(d)/documents/users/$(request.auth.uid))
+    &&get(/databases/$(d)/documents/users/$(request.auth.uid)).data.role=='superadmin';
+}
+function comp(id){return get(/databases/$(d)/documents/competitions/$(id)).data;}
+function owns(id){return request.auth!=null&&(comp(id).ownerId==request.auth.uid||admin());}
+function isMod(id){return request.auth!=null&&request.auth.uid in comp(id).get('mods',{});}
+function mp(id,k){return isMod(id)&&comp(id).mods[request.auth.uid].get(k,false)==true;}
+function myTeam(id){return isMod(id)?comp(id).mods[request.auth.uid].get('team',null):null;}
+
+match /users/{uid}{
+  allow read:if request.auth!=null&&(request.auth.uid==uid||admin());
+  allow create:if request.auth!=null&&request.auth.uid==uid&&request.resource.data.role in ['organizer','player','viewer'];
+  allow update:if request.auth!=null&&((request.auth.uid==uid&&request.resource.data.role==resource.data.role)||(admin()&&request.resource.data.role in ['organizer','player','viewer']));
+}
+
+match /competitions/{id}{
+  allow read:if true;
+  allow create:if request.auth!=null&&request.resource.data.ownerId==request.auth.uid&&get(/databases/$(d)/documents/users/$(request.auth.uid)).data.role in ['organizer','superadmin'];
+  // Owner / super admin: everything
+  allow update:if request.auth!=null&&(resource.data.ownerId==request.auth.uid||admin());
+  // Moderator with "Edit tournament": everything except owner-level fields
+  allow update:if mp(id,'tournament')&&!request.resource.data.diff(resource.data).affectedKeys().hasAny(['mods','ownerId','followers','followerInfo','views']);
+  // Followers: follow / unfollow (+ public name shown in the owner's follower list)
+  allow update:if request.auth!=null
+    &&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followers','followerInfo'])
+    &&request.resource.data.followers.size()<=resource.data.followers.size()+1;
+  // Views counter: anyone may add exactly 1
+  allow update:if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views'])&&request.resource.data.views==resource.data.get('views',0)+1;
+  allow delete:if request.auth!=null&&resource.data.ownerId==request.auth.uid;
+
+  match /messages/{m}{
+    allow read:if true;
+    allow create:if request.auth!=null&&request.resource.data.uid==request.auth.uid&&request.resource.data.text.size()>0&&request.resource.data.text.size()<=500;
+    allow delete:if request.auth!=null&&resource.data.uid==request.auth.uid;
+  }
+
+  // Matches: result moderators may update unfinished matches (all, or only their team)
+  match /matches/{mt}{
+    allow update:if request.auth!=null&&resource.data.status!='done'
+      &&(mp(id,'result')||(myTeam(id)!=null&&(resource.data.homeId==myTeam(id)||resource.data.awayId==myTeam(id))));
+  }
+
+  // Media posts: media moderators add/remove; signed-in users like (likes) and bump comment count (cc)
+  match /posts/{p}{
+    allow create,delete:if mp(id,'media');
+    allow update:if request.auth!=null
+      &&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes','cc'])
+      &&request.resource.data.get('likes',[]).size()<=resource.data.get('likes',[]).size()+1
+      &&request.resource.data.get('cc',0)<=resource.data.get('cc',0)+1;
+
+    match /comments/{cm}{
+      allow read:if true;
+      allow create:if request.auth!=null
+        &&request.resource.data.uid==request.auth.uid
+        &&request.resource.data.text.size()>0&&request.resource.data.text.size()<=500
+        &&comp(id).get('allowComments',true)!=false;
+      allow delete:if request.auth!=null&&(resource.data.uid==request.auth.uid||owns(id)||mp(id,'media'));
+    }
+  }
+
+  match /{sub}/{doc}{
+    allow read:if true;
+    allow write:if request.auth!=null&&(owns(id)||mp(id,'tournament'));
+  }
+}
+
+match /organizers/{id}{allow read:if true;allow write:if request.auth!=null&&(request.auth.uid==id||admin());}
+match /activity/{id}{allow read:if true;allow create:if request.auth!=null;}
+match /notifications/{id}{allow read:if true;allow create,delete:if admin();}
+match /adminLogs/{id}{allow read,create:if admin();}
+
+}}

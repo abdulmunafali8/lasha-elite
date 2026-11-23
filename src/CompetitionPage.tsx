@@ -1,8 +1,8 @@
 import {Fragment,useEffect,useMemo,useState} from "react";import {createPortal} from "react-dom";
 import {onAuthStateChanged,User} from "firebase/auth";
-import {collection,doc,query,orderBy,onSnapshot,addDoc,deleteDoc,updateDoc,writeBatch,serverTimestamp,arrayUnion,arrayRemove} from "firebase/firestore";
+import {collection,doc,query,orderBy,onSnapshot,addDoc,deleteDoc,updateDoc,writeBatch,serverTimestamp,arrayUnion,arrayRemove,increment,deleteField} from "firebase/firestore";
 import {auth,db} from "./firebase";import {useLang} from "./i18n";import {useLive} from "./hooks";
-import Players from "./Players";import Generate from "./Generate";import Bracket from "./Bracket";import MatchSheet from "./MatchSheet";import Media from "./Media";import "./sheetStyles";import Messages from "./Messages";import ExportMatches from "./ExportMatches";import {Competition,Stage,Round,Match,Player} from "./types";import {standings,ranking} from "./standings";
+import Players from "./Players";import Generate from "./Generate";import Bracket from "./Bracket";import MatchSheet from "./MatchSheet";import Media from "./Media";import "./sheetStyles";import type {Mod} from "./Moderators";import Messages from "./Messages";import ExportMatches from "./ExportMatches";import {Competition,Stage,Round,Match,Player} from "./types";import {standings,ranking} from "./standings";
 type Tab="home"|"games"|"table"|"ranking"|"videos";
 const TabIc=({k}:{k:Tab})=><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{k==="home"?<><path d="M3.5 11.5L12 4l8.5 7.5"/><path d="M6.5 14v3a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-3"/></>
 :k==="games"?<><rect x="2.8" y="6" width="18.4" height="12" rx="3" strokeWidth="1.6"/><path d="M12 6v12" strokeWidth="1.6"/><circle cx="12" cy="12" r="2.1" strokeWidth="1.6"/><rect x="4.9" y="9.6" width="1.7" height="4.8" rx=".7" strokeWidth="1.4"/><rect x="17.4" y="9.6" width="1.7" height="4.8" rx=".7" strokeWidth="1.4"/></>
@@ -21,6 +21,8 @@ const [rk,setRk]=useState<"scorers"|"assists"|"penalties"|"gk">("scorers");const
 const [adding,setAdding]=useState(false);const [gen,setGen]=useState(false);const [br,setBr]=useState(false);const [editing,setEditing]=useState("");const [msg,setMsg]=useState("");const [mo,setMo]=useState(false);const [ex,setEx]=useState(false);const [needP,setNeedP]=useState(false);const [tp,setTp]=useState(false);const [gp,setGp]=useState(false);const [rsOpen,setRsOpen]=useState(false);const [sheetId,setSheetId]=useState("");const [menuId,setMenuId]=useState("");const [tmId,setTmId]=useState("");const [tmH,setTmH]=useState("");const [tmA,setTmA]=useState("");
 useEffect(()=>onAuthStateChanged(auth,setUser),[]);
 useEffect(()=>onSnapshot(doc(db,"competitions",id),s=>s.exists()?setC({id:s.id,...s.data()} as never):setMissing(true),()=>setMissing(true)),[id]);
+useEffect(()=>{try{const k="v_"+id;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1")}catch{/* babu ajiya */}updateDoc(doc(db,"competitions",id),{views:increment(1)}).catch(()=>{/* rules */})},[id]);
+useEffect(()=>{if(!user||!c||!c.followers?.includes(user.uid))return;if((c as unknown as {followerInfo?:Record<string,unknown>}).followerInfo?.[user.uid])return;updateDoc(doc(db,"competitions",id),{["followerInfo."+user.uid]:{name:user.displayName||(user.email??"").split("@")[0]||"user",photo:user.photoURL??null}}).catch(()=>{/* rules */})},[user,c,id]);
 const col=(n:string)=>query(collection(db,"competitions",id,n),orderBy(n==="matches"?"createdAt":"order"));
 const stages=useLive<Stage>(useMemo(()=>col("stages"),[id])).d;
 const rounds=useLive<Round>(useMemo(()=>col("rounds"),[id])).d;
@@ -33,7 +35,7 @@ useEffect(()=>{if(!stageId&&stages[0])setStageId(stages[0].id)},[stages,stageId]
 const sRounds=rounds.filter(r=>r.stageId===stageId);
 useEffect(()=>{if(!sRounds.find(r=>r.id===roundId))setRoundId(sRounds[0]?.id??"")},[stageId,rounds]);
 if(missing)return<div className="app"><p className="muted pad">{t.err}</p></div>;if(!c)return<div className="app"><p className="muted pad">{t.loading}</p></div>;
-const owner=user?.uid===c.ownerId;const following=!!user&&c.followers?.includes(user.uid);
+const mod=user?(c as unknown as {mods?:Record<string,Mod>}).mods?.[user.uid]:undefined;const owner=user?.uid===c.ownerId||!!mod?.tournament;const canRes=(x:Match)=>!!mod&&x.status!=="done"&&(!!mod.result||(!!mod.team&&(x.homeId===mod.team||x.awayId===mod.team)));const following=!!user&&c.followers?.includes(user.uid);
 const base=`competitions/${id}`;const sub=(n:string)=>collection(db,base,n);
 const champOf=(sid:string):{id?:string|null;name:string;logo?:string|null;kind:"ko"|"league"}|null=>{const sm=matches.filter(m=>m.stageId===sid);if(!sm.length)return null;
 if(sm.some(m=>m.ko)){const f=sm.find(m=>m.ko&&!m.third&&(m.rIdx??0)===(m.total??0)&&m.status==="done"&&m.homeScore!=null&&m.awayScore!=null);if(!f)return null;const w=(f.homeScore??0)>(f.awayScore??0);return{id:w?f.homeId:f.awayId,name:(w?f.homeName:f.awayName)??"",logo:w?f.homeLogo:f.awayLogo,kind:"ko"}}
@@ -44,7 +46,7 @@ const champBanner=(ch:ReturnType<typeof champOf>)=>ch?<div className="champ"><sp
 const ask=(label:string)=>{const v=prompt(label)?.trim();return v||null};
 const addStage=async()=>{const n=ask(t.stageName);if(n)await addDoc(sub("stages"),{name:n,order:stages.length+1})};
 const addRound=async()=>{if(!stageId)return setMsg(t.pickRound);const n=ask(t.roundName)??`${t.round} ${sRounds.length+1}`;await addDoc(sub("rounds"),{stageId,name:n,order:sRounds.length+1})};
-const toggleFollow=()=>{if(!user)return setMsg(t.signin);return updateDoc(doc(db,"competitions",id),{followers:following?arrayRemove(user.uid):arrayUnion(user.uid)})};
+const toggleFollow=()=>{if(!user)return setMsg(t.signin);return updateDoc(doc(db,"competitions",id),{followers:following?arrayRemove(user.uid):arrayUnion(user.uid),["followerInfo."+user.uid]:following?deleteField():{name:user.displayName||(user.email??"").split("@")[0]||"user",photo:user.photoURL??null}})};
 const share=()=>navigator.share?.({title:c.name,url:location.href}).catch(()=>{});
 const del=async(path:string)=>{if(confirm(t.sure))await deleteDoc(doc(db,path))};
 const resetStage=async()=>{if(!confirm(t.sure))return;try{const refs=[...matches.filter(m=>m.stageId===stageId).map(m=>doc(db,base,"matches",m.id)),...sRounds.map(r=>doc(db,base,"rounds",r.id))];for(let i=0;i<refs.length;i+=400){const b=writeBatch(db);refs.slice(i,i+400).forEach(r=>b.delete(r));await b.commit()}setRoundId("")}catch{setMsg(t.err)}};
@@ -89,7 +91,7 @@ return<>{champBanner(champOf(stageId))}{done.length>0&&<><div className="rst"><d
 <button type="button" className="rsb" aria-expanded={rsOpen} onClick={()=>setRsOpen(!rsOpen)}><Ic d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" s={20}/>{t.sRound}<Ic d={rsOpen?"M6 15l6-6 6 6":"M6 9l6 6 6-6"} s={20}/></button>
 {rsOpen&&<div className="rsx"><div><span>{t.assists}</span><b>{sum(m=>(m.homeAssists??0)+(m.awayAssists??0))}</b></div><div><span>{t.penalties}</span><b>{sum(m=>(m.homePens??0)+(m.awayPens??0))}</b></div><div><span>{t.cs}</span><b>{sum(m=>(m.homeScore===0?1:0)+(m.awayScore===0?1:0))}</b></div><div><span>{t.sTop}</span><b>{Math.max(...done.map(m=>(m.homeScore??0)+(m.awayScore??0)))}</b></div></div>}</>}
 {list.map(m=>{const s=m.slot??0;const ko=!!m.ko&&!m.third&&(m.rIdx??0)<(m.total??0);const sib=ko&&list.some(x=>x.id!==m.id&&!x.third&&x.slot===(s^1));const mn=ko?mini(m):null;
-return<Fragment key={m.id}>{ko&&s%2===1&&!sib?mn:null}<MatchCard all={matches} m={m} owner={owner} open={editing===m.id} setOpen={o=>setEditing(o?m.id:"")} base={base} cid={id} t={t} onDel={()=>del(`${base}/matches/${m.id}`)} onErr={setMsg} hdr={hdr(m)} conn={ko?(s%2===0?"cdn":"cup"):""} fin={!!m.ko&&(m.rIdx??0)===(m.total??0)} end={ko&&(s%2===1||!sib)} onSheet={()=>setSheetId(m.id)} onMenu={()=>setMenuId(m.id)}/>{ko&&s%2===0?mn:null}</Fragment>})}</>})()}
+return<Fragment key={m.id}>{ko&&s%2===1&&!sib?mn:null}<MatchCard all={matches} m={m} owner={owner||canRes(m)} open={editing===m.id} setOpen={o=>setEditing(o?m.id:"")} base={base} cid={id} t={t} onDel={()=>del(`${base}/matches/${m.id}`)} onErr={setMsg} hdr={hdr(m)} conn={ko?(s%2===0?"cdn":"cup"):""} fin={!!m.ko&&(m.rIdx??0)===(m.total??0)} end={ko&&(s%2===1||!sib)} onSheet={()=>setSheetId(m.id)} onMenu={()=>setMenuId(m.id)}/>{ko&&s%2===0?mn:null}</Fragment>})}</>})()}
 {roundId&&!matches.some(m=>m.roundId===roundId)&&<p className="muted">{t.noMatches}</p>}
 
 </section>}
@@ -99,7 +101,7 @@ return<Fragment key={m.id}>{ko&&s%2===1&&!sib?mn:null}<MatchCard all={matches} m
 {tab==="ranking"&&(()=>{const rows=ranking(players,matches.filter(m=>!rs||m.stageId===rs),rk);return<section className="pad"><div className="pills">{(["scorers","assists","penalties","gk"] as const).map(k=><button key={k} className={"pill"+(rk===k?" on":"")} onClick={()=>setRk(k)}>{t[k]}</button>)}</div>
 <div className="sh"><select className="sel" value={rs} onChange={e=>setRs(e.target.value)} aria-label={t.stage}><option value="">{t.allStages}</option>{stages.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select><span className="muted">{rows.length} {t.players}</span></div>
 {rows.length===0?<p className="muted ctr bigmu">{t.noData}</p>:rows.map((r,i)=><div key={r.id} className="prow"><b className="rk">{i+1}</b><span className="cr">{r.logoUrl?<img src={r.logoUrl} alt=""/>:r.name.slice(0,2).toUpperCase()}</span><div className="grow"><b>{r.name}</b>{r.sub&&<p className="muted">{r.sub}</p>}</div><b className="rv">{r.value}</b></div>)}</section>})()}
-{tab==="videos"&&<Media cid={id} user={user} owner={owner} name={c.name} logoUrl={c.logoUrl} t={t}/>}
+{tab==="videos"&&<Media cid={id} user={user} owner={owner||!!mod?.media} name={c.name} logoUrl={c.logoUrl} t={t} allowComments={(c as unknown as {allowComments?:boolean}).allowComments!==false}/>}
 {needP&&<div className="exscrim" onClick={()=>setNeedP(false)}><div className="exdlg alert" onClick={e=>e.stopPropagation()}><p className="atitle">{t.noPlayers}</p><div className="exact"><a className="alink" href={`#/competition/${id}/settings`} onClick={()=>{try{sessionStorage.setItem("openSec","players")}catch{}setNeedP(false)}}>{t.addPlayers}</a></div></div></div>}
 {menuId&&(()=>{const mm=matches.find(q=>q.id===menuId);if(!mm)return null;const st=mm.status as string;const close=()=>setMenuId("");
 const nx=mm.ko?matches.find(q=>q.id===`${mm.stageId}_r${(mm.rIdx??0)+1}_s${(mm.slot??0)>>1}`):undefined;
@@ -120,7 +122,7 @@ return createPortal(<div className="mm-wrap" onClick={close}><div className="mm-
 <label>{t.homeP}<select value={tmH} onChange={e=>setTmH(e.target.value)} style={{width:"100%"}}><option value=""/>{players.filter(p=>p.id!==tmA).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
 <label>{t.awayP}<select value={tmA} onChange={e=>setTmA(e.target.value)} style={{width:"100%"}}><option value=""/>{players.filter(p=>p.id!==tmH).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
 <div className="r"><button className="btn sm ghost" onClick={close}>{t.cancel}</button><button className="btn sm" onClick={go}>{t.save}</button></div></div></div>,document.body)})()}
-{sheetId&&(()=>{const sm=matches.find(q=>q.id===sheetId);return sm?<MatchSheet m={sm} all={matches} players={players} base={base} owner={owner} t={t} onClose={()=>setSheetId("")} onErr={setMsg} closeMatch={(hn,an)=>closeMatch({all:matches,base,cid:id,t},sm,hn,an,[sm.homeAssists??0,sm.awayAssists??0,sm.homePens??0,sm.awayPens??0])}/>:null})()}
+{sheetId&&(()=>{const sm=matches.find(q=>q.id===sheetId);return sm?<MatchSheet m={sm} all={matches} players={players} base={base} owner={owner||canRes(sm)} t={t} onClose={()=>setSheetId("")} onErr={setMsg} closeMatch={(hn,an)=>closeMatch({all:matches,base,cid:id,t},sm,hn,an,[sm.homeAssists??0,sm.awayAssists??0,sm.homePens??0,sm.awayPens??0])}/>:null})()}
 {ex&&<ExportMatches name={c.name} stages={stages} rounds={rounds} matches={matches} stageId={stageId} roundId={roundId} color={c.color} coverUrl={c.coverUrl} t={t} onClose={()=>setEx(false)} onMsg={setMsg}/>}
 </div>)}
 

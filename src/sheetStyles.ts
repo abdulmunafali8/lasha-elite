@@ -10,6 +10,17 @@ const css=`
 .lochd a{color:var(--royal);font-weight:800;text-decoration:none;text-transform:none;letter-spacing:0;font-size:.92rem}
 .locrow{display:flex;align-items:center;gap:12px;margin-top:10px;padding:12px;background:var(--bg);border-radius:14px;color:var(--navy);font-weight:700}
 .edit .dt{display:grid;gap:8px;margin:10px 0;width:100%}.edit .dt input{width:100%;min-width:0;box-sizing:border-box;height:auto;text-align:left;border:1.5px solid #b8c1d8;border-radius:10px;padding:12px;font:inherit}
+.mo-top{display:flex;align-items:center;justify-content:space-between;padding:4px 0 8px}
+.mo-row{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-bottom:1px solid rgba(128,140,170,.25);padding:10px 0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.mo-av{width:48px;height:48px;border-radius:50%;flex:none;object-fit:cover;display:grid;place-items:center;background:#1d2d52;color:#fff;font-weight:800}
+.mo-wrap{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:16px}
+.mo-box{background:#031625;color:#fff;border-radius:24px;padding:22px;width:min(92vw,520px);max-height:86vh;overflow:auto;box-sizing:border-box}
+.mo-box h2{margin:0 0 16px;font-size:1.8rem}.mo-box .mo-row{color:#fff}
+.mo-s{display:block;position:relative;margin-bottom:12px}.mo-s span{position:absolute;top:-9px;left:12px;background:#031625;padding:0 6px;font-size:.8rem;font-weight:700;color:#b9c3e0}
+.mo-s input,.mo-sel{width:100%;box-sizing:border-box;border:1px solid #3a4a76;background:#0e1730;color:#fff;border-radius:10px;padding:14px;font:inherit}
+.mo-p{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;color:#fff}.mo-p span{display:grid;gap:4px}.mo-p b{font-size:1.15rem}.mo-p small{font-size:1rem;opacity:.85}
+.mo-p input{width:26px;height:26px;flex:none;accent-color:#fff}
+.mo-acts{display:flex;align-items:center;justify-content:flex-end;gap:22px;margin-top:18px}.mo-rm{background:none;border:0;color:#ff4d3d;font:inherit;font-size:1.2rem;font-weight:800;cursor:pointer}
 .dtl{display:grid;gap:4px;width:100%;text-align:left}.dtl span{font-size:.78rem;font-weight:800;color:var(--mu);letter-spacing:.06em;text-transform:uppercase}
 .edit .dt input[type=datetime-local]{min-height:48px;color:inherit}
 .champ>div{display:grid;gap:2px;justify-items:start;min-width:0}.champ em{display:block}

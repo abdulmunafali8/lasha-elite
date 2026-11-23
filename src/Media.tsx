@@ -9,16 +9,16 @@ const Ic=({d,s=22}:{d:string;s?:number})=><svg viewBox="0 0 24 24" width={s} hei
 const HEART="M12 20s-7-4.6-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.4-7 10-7 10z";const CHAT="M4 5h16v11H9l-5 4z";const SHARE="M12 16V4M7 9l5-5 5 5M5 20h14";
 const when=(p:Post)=>p.createdAt?new Date(p.createdAt.toMillis()).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"";
 
-function Comments({cid,pid,user,t,onErr}:{cid:string;pid:string;user:User|null;t:Record<string,string>;onErr:(s:string)=>void}){
+function Comments({cid,pid,user,t,onErr,allow=true}:{cid:string;pid:string;user:User|null;t:Record<string,string>;onErr:(s:string)=>void;allow?:boolean}){
 const list=useLive<Cm>(useMemo(()=>query(collection(db,"competitions",cid,"posts",pid,"comments"),orderBy("createdAt")),[cid,pid])).d;
 const [tx,setTx]=useState("");
 const send=async(e:FormEvent)=>{e.preventDefault();const v=tx.trim();if(!v)return;if(!user)return onErr(t.postLoginLike);
 try{await addDoc(collection(db,"competitions",cid,"posts",pid,"comments"),{text:v.slice(0,500),uid:user.uid,name:user.displayName||(user.email??"").split("@")[0]||"user",createdAt:serverTimestamp()});
 await updateDoc(doc(db,"competitions",cid,"posts",pid),{cc:increment(1)});setTx("")}catch{onErr(t.err)}};
 return<div className="md-cm">{list.map(c=><p key={c.id}><b>{c.name}</b> {c.text}</p>)}
-<form onSubmit={send}><input value={tx} placeholder={t.commentPh} onChange={e=>setTx(e.target.value)} maxLength={500}/><button className="btn sm">{t.qAdd}</button></form></div>}
+{allow&&<form onSubmit={send}><input value={tx} placeholder={t.commentPh} onChange={e=>setTx(e.target.value)} maxLength={500}/><button className="btn sm">{t.qAdd}</button></form>}</div>}
 
-export default function Media({cid,user,owner,name,logoUrl,t}:{cid:string;user:User|null;owner:boolean;name:string;logoUrl?:string;t:Record<string,string>}){
+export default function Media({cid,user,owner,name,logoUrl,t,allowComments=true}:{cid:string;user:User|null;owner:boolean;name:string;logoUrl?:string;t:Record<string,string>;allowComments?:boolean}){
 const posts=useLive<Post>(useMemo(()=>query(collection(db,"competitions",cid,"posts"),orderBy("createdAt","desc")),[cid]));
 const [f,setF]=useState<"all"|"news">("all");const [adding,setAdding]=useState(false);const [kind,setKind]=useState<"photo"|"news">("photo");const [text,setText]=useState("");const [file,setFile]=useState<File|null>(null);const [busy,setBusy]=useState(false);const [msg,setMsg]=useState("");const [openC,setOpenC]=useState("");
 const list=posts.d.filter(p=>f==="all"||p.kind==="news");
@@ -39,5 +39,5 @@ return<section className="pad rel">
 <div className="md-ph"><span className="av">{logoUrl?<img src={logoUrl} alt="" width={44} height={44}/>:<b>{name.slice(0,2).toUpperCase()}</b>}</span><span><b>{name}</b><small>{when(p)}</small></span>{owner&&<button className="x" aria-label={t.del} onClick={()=>del(p)}>🗑</button>}</div>
 {p.text&&<p className="md-tx">{p.text}</p>}{p.imageUrl&&<div className="md-img"><img src={p.imageUrl} alt="" loading="lazy"/><span className="md-tag">{p.kind==="news"?t.feedNews.toUpperCase():t.postPhoto.toUpperCase()}</span></div>}
 <div className="md-act"><button className={liked?"on":""} onClick={()=>like(p)} aria-label="like"><Ic d={HEART}/>{(p.likes??[]).length}</button><button onClick={()=>setOpenC(openC===p.id?"":p.id)} aria-label={t.comments}><Ic d={CHAT}/>{p.cc??0}</button><button onClick={()=>share(p)} aria-label={t.share}><Ic d={SHARE}/></button></div>
-{openC===p.id&&<Comments cid={cid} pid={p.id} user={user} t={t} onErr={setMsg}/>}</article>})}
+{openC===p.id&&<Comments cid={cid} pid={p.id} user={user} t={t} onErr={setMsg} allow={allowComments}/>}</article>})}
 </section>}

@@ -21,6 +21,8 @@ const css=`
 .mo-p{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;color:#fff}.mo-p span{display:grid;gap:4px}.mo-p b{font-size:1.15rem}.mo-p small{font-size:1rem;opacity:.85}
 .mo-p input{width:26px;height:26px;flex:none;accent-color:#fff}
 .mo-acts{display:flex;align-items:center;justify-content:flex-end;gap:22px;margin-top:18px}.mo-rm{background:none;border:0;color:#ff4d3d;font:inherit;font-size:1.2rem;font-weight:800;cursor:pointer}
+.shd{background:#121b33;border-radius:28px;padding:34px 40px;display:grid;gap:16px;justify-items:center;min-width:min(70vw,300px);box-shadow:0 12px 40px #000a}
+.shd button{background:#16286b;color:#fff;border:0;border-radius:999px;padding:14px 30px;font:inherit;font-weight:800;font-size:1.25rem;cursor:pointer}
 .sh-wrap{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.55);display:flex;align-items:flex-end}
 .sh-sheet{background:#0f1a36;color:#fff;width:100%;border-radius:24px 24px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom) + 22px);box-sizing:border-box;max-height:92vh;overflow:auto}
 .sh-grab{display:block;width:44px;height:4px;border-radius:2px;background:#8fa0c8;margin:6px auto 18px}

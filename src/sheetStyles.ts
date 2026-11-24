@@ -11,7 +11,9 @@ const css=`
 .locrow{display:flex;align-items:center;gap:12px;margin-top:10px;padding:12px;background:var(--bg);border-radius:14px;color:var(--navy);font-weight:700}
 .edit .dt{display:grid;gap:8px;margin:10px 0;width:100%}.edit .dt input{width:100%;min-width:0;box-sizing:border-box;height:auto;text-align:left;border:1.5px solid #b8c1d8;border-radius:10px;padding:12px;font:inherit}
 .mo-top{display:flex;align-items:center;justify-content:space-between;padding:4px 0 8px}
-.mo-row{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-bottom:1px solid rgba(128,140,170,.25);padding:10px 0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.mo-top b{color:var(--navy);font-size:1.15rem}
+.mo-top .ib{background:var(--royal);color:#fff;border-radius:50%;min-width:42px;width:42px;height:42px;padding:0;font-size:1.6rem;font-weight:700;line-height:1}
+.mo-row{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-bottom:1px solid rgba(128,140,170,.25);padding:10px 0;color:var(--navy);font:inherit;text-align:left;cursor:pointer}
 .mo-av{width:48px;height:48px;border-radius:50%;flex:none;object-fit:cover;display:grid;place-items:center;background:#1d2d52;color:#fff;font-weight:800}
 .mo-wrap{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:16px}
 .mo-box{background:#031625;color:#fff;border-radius:24px;padding:22px;width:min(92vw,520px);max-height:86vh;overflow:auto;box-sizing:border-box}

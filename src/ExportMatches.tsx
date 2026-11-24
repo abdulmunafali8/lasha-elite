@@ -5,7 +5,7 @@ type Lg={homeLogo?:string|null;awayLogo?:string|null};
 const SIZES={STORIES:[1080,1920],SQUAD:[1080,1080],FEED:[1080,1350],DYNAMIC:[1080,0]} as const;
 type WK=keyof typeof SIZES;
 const FONT="Roboto,Arial,sans-serif";
-const IC={print:"M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z",image:"M4 4h16v16H4zM4 16l5-5 4 4 3-3 4 4M9 9h.01",excel:"M4 4h16v16H4zM4 12h16M12 4v16",text:"M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7",html:"M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",back:"M19 12H5M12 5l-7 7 7 7"};
+const IC={print:"M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z",image:"M4 4h16v16H4zM4 16l5-5 4 4 3-3 4 4M9 9h.01",excel:"M4 4h16v16H4zM4 12h16M12 4v16",text:"M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7",html:"M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",back:"M19 12H5M12 5l-7 7 7 7",share:"M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.6 13.5l6.8 4M15.4 6.5l-6.8 4"};
 const Ic=({d}:{d:string})=><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d}/></svg>;
 const abbr=(n:string)=>n.replace(/[^\p{L}\p{N} ]/gu,"").trim().slice(0,3).toUpperCase()||"?";
 const score=(m:Match)=>m.status==="done"?`${m.homeScore} - ${m.awayScore}`:"x";
@@ -19,7 +19,7 @@ x.fillStyle="#10224d";x.font=`800 ${Math.round(r*0.8)}px ${FONT}`;x.textAlign="c
 export default function ExportMatches({name,stages,rounds,matches,stageId,roundId,coverUrl,t,onClose,onMsg}:Props){
 const [step,setStep]=useState<"menu"|"scope"|"image">("menu");const [scope,setScope]=useState<"stage"|"round">(roundId?"round":"stage");
 const [wk,setWk]=useState<WK>("DYNAMIC");const [showT,setShowT]=useState(true);const [tt,setTt]=useState(name);const [showR,setShowR]=useState(true);const [rt,setRt]=useState("");
-const [bg,setBg]=useState("#ffffff");const [cov,setCov]=useState(false);const [ab,setAb]=useState(false);
+const [sd,setSd]=useState(false);const [bg,setBg]=useState("#ffffff");const [cov,setCov]=useState(false);const [ab,setAb]=useState(false);
 const cv=useRef<HTMLCanvasElement>(null);const cache=useRef(new Map<string,HTMLImageElement|null>());
 const stage=stages.find(s=>s.id===stageId);const round=rounds.find(r=>r.id===roundId);
 const rn=(rid:string)=>rounds.find(r=>r.id===rid)?.name??"";const ri=(rid:string)=>rounds.findIndex(r=>r.id===rid);
@@ -56,6 +56,9 @@ const sides:[number,string,HTMLImageElement|null][]=[[cx1,String(m.homeName||t.t
 sides.forEach(([cx,nm,im])=>{crest(x,cx,cy,r,nm,im);x.fillStyle=fg;x.font=`500 ${fs}px ${FONT}`;x.textAlign="center";x.textBaseline="alphabetic";x.fillText(ab?abbr(nm):nm,cx,y0+rowH*0.82,CW*0.3)});
 const done=m.status==="done";x.fillStyle=done?fg:gr;x.font=done?`800 52px ${FONT}`:`400 26px ${FONT}`;x.textAlign="center";x.textBaseline="middle";x.fillText(score(m),CW/2,y0+rowH*0.52);x.textBaseline="alphabetic"})};
 useEffect(()=>{if(step!=="image")return;let off=false;const c=cv.current;if(c)void draw(c,()=>off);return()=>{off=true}},[step,wk,showT,tt,showR,rt,bg,cov,ab,scope,matches]);
+const blob=()=>new Promise<Blob|null>(res=>{const c=cv.current;if(!c)return res(null);try{c.toBlob(b=>res(b),"image/png")}catch{res(null)}});
+const doOpen=async()=>{const w=window.open("","_blank");const b=await blob();if(!b){w?.close();return onMsg(t.err)}if(w)w.location.href=URL.createObjectURL(b);else save(b,`${name}-${label}.png`);setSd(false)};
+const doShare=async()=>{const b=await blob();if(!b)return onMsg(t.err);const f=new File([b],`${name}-${label}.png`,{type:"image/png"});try{if(typeof navigator.canShare==="function"&&navigator.canShare({files:[f]}))await navigator.share({files:[f],title:name});else save(b,f.name)}catch{/* an soke */}setSd(false)};
 const download=()=>{try{cv.current?.toBlob(b=>{if(b)save(b,`${name}-${label}.png`)},"image/png")}catch{onMsg(t.err)}};
 if(step==="menu")return<div className="exscrim" onClick={onClose}><div className="exmenu" onClick={e=>e.stopPropagation()}>
 <button onClick={doPrint}><Ic d={IC.print}/>{t.exPrint}</button><button onClick={()=>setStep("scope")}><Ic d={IC.image}/>{t.exImage}</button><button onClick={doExcel}><Ic d={IC.excel}/>Excel</button><button onClick={doText}><Ic d={IC.text}/>{t.exText}</button><button onClick={doHtml}><Ic d={IC.html}/>{t.exHtml}</button></div></div>;
@@ -63,7 +66,7 @@ if(step==="scope")return<div className="exscrim" onClick={onClose}><div classNam
 <label className="chk"><input type="radio" checked={scope==="stage"} onChange={()=>setScope("stage")}/>{stage?.name}</label>
 {roundId&&<label className="chk"><input type="radio" checked={scope==="round"} onChange={()=>setScope("round")}/>{round?.name}</label>}
 <div className="exact"><button className="btn sm" onClick={()=>setStep("image")}>{t.exImage}</button></div></div></div>;
-return<div className="exfull"><header className="ch"><div className="chr"><button className="ib" onClick={onClose} aria-label={t.cancel}><Ic d={IC.back}/></button><h1>{t.games}</h1></div></header>
+return<div className="exfull"><header className="ch"><div className="chr"><button className="ib" onClick={onClose} aria-label={t.cancel}><Ic d={IC.back}/></button><h1>{t.games}</h1><button className="ib" onClick={()=>setSd(true)} aria-label={t.share}><Ic d={IC.share}/></button></div></header>
 <div className="expv"><canvas ref={cv}/></div>
 <div className="sform">
 <p className="sec dark">{t.exWidth}</p>
@@ -73,4 +76,5 @@ return<div className="exfull"><header className="ch"><div className="chr"><butto
 <label className="srow"><span>{t.exBg}</span><input type="color" value={/^#[0-9a-f]{6}$/i.test(bg)?bg:"#172B59"} onChange={e=>setBg(e.target.value)}/></label>
 <label className="srow"><span>{t.cover}</span><input type="checkbox" checked={cov} disabled={!coverUrl} onChange={e=>setCov(e.target.checked)}/></label>
 <label className="srow"><span>{t.exAbbr}</span><input type="checkbox" checked={ab} onChange={e=>setAb(e.target.checked)}/></label>
-<button className="btn" onClick={download}>{t.exDl}</button></div></div>}
+<button className="btn" onClick={download}>{t.exDl}</button></div>
+{sd&&<div className="exscrim" onClick={()=>setSd(false)}><div className="shd" role="dialog" onClick={e=>e.stopPropagation()}><button type="button" onClick={doOpen}>{t.exOpen}</button><button type="button" onClick={doShare}>{t.share}</button></div></div>}</div>}

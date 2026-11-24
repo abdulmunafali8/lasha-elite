@@ -29,7 +29,7 @@ const back=<header className="ch"><div className="chr"><a className="ib" href={`
 if(user===undefined||!c)return<div className="app">{back}<p className="muted pad">{t.loading}</p></div>;
 const modP=user?(c.mods as Record<string,Mod>|undefined)?.[user.uid]:undefined;
 if(!user||(user.uid!==c.ownerId&&!modP?.tournament))return<div className="app">{back}<p className="toast">{t.notOwner}</p></div>;
-const upd=(d:Record<string,unknown>)=>updateDoc(doc(db,"competitions",id),d).then(()=>setMsg(t.saved)).catch(()=>setMsg(t.err));
+const upd=(d:Record<string,unknown>)=>updateDoc(doc(db,"competitions",id),d).then(()=>setMsg(t.saved)).catch(e=>{setMsg(t.err+" ("+((e as {code?:string}).code??"")+")")});
 const set=(k:string,v:string)=>setF(p=>({...p,[k]:v}));
 const saveBasic=async(e:React.FormEvent)=>{e.preventDefault();setMsg("");if(f.name.trim().length<3)return setMsg(t.req+": "+t.ctitle);if(f.start&&f.end&&f.end<f.start)return setMsg(t.endBefore);
 setBusy(true);try{const base=`competitions/${user.uid}/${id}`;const d:Record<string,unknown>={name:f.name.trim(),subhead:f.subhead.trim(),description:f.desc.trim(),startDate:f.start||null,endDate:f.end||null,mode:f.mode,location:f.mode==="person"?f.place.trim():""};
@@ -40,7 +40,7 @@ const addStage=async()=>{const n=prompt(t.stageName)?.trim();if(n)await addDoc(c
 const renameStage=async(s:Stage)=>{const n=prompt(t.stageName,s.name)?.trim();if(n)await updateDoc(doc(db,"competitions",id,"stages",s.id),{name:n})};
 const delStage=async(s:Stage)=>{const r=await getDocs(query(collection(db,"competitions",id,"rounds"),where("stageId","==",s.id)));if(!r.empty)return setMsg(t.stageUsed);if(confirm(t.sure))await deleteDoc(doc(db,"competitions",id,"stages",s.id))};
 const Row=({label,k,count,soon}:{label:string;k:string;count?:number;soon?:boolean})=><div className="srow2"><span className="ri"><Ic d={IC[k]||IC.rules}/></span><span className="rl">{label}{count!=null&&` (${count})`}</span>{soon?<em>{t.soon}</em>:<button type="button" className="lnk" onClick={()=>["players","stages","teams","groups"].includes(k)?setOpen(open===k?"":k):editTxt(k)}>{t.edit}</button>}</div>;
-return(<div className="app">{back}{msg&&<p className="toast" role="alert" onClick={()=>setMsg("")}>{msg}</p>}
+return(<div className="app">{back}{msg&&<p className={"toast"+(msg===t.saved?" ok":"")} role="alert" onClick={()=>setMsg("")}>{msg}</p>}
 <form className="sform" onSubmit={saveBasic} noValidate><p className="sec">{t.basic}</p>
 <div className="two"><ImagePick round label={t.logo} hint="200x240" file={logo} onFile={setLogo} onErr={k=>setMsg(t[k]??k)} current={c.logoUrl}/><div className="grow"><label className="fl"><span>{t.ctitle}</span><input value={f.name} onChange={e=>set("name",e.target.value)}/></label><label className="fl"><span>{t.subhead}</span><input value={f.subhead} onChange={e=>set("subhead",e.target.value)}/></label></div></div>
 <ImagePick label={t.cover} hint="1600x533" file={cover} onFile={setCover} onErr={k=>setMsg(t[k]??k)} current={c.coverUrl}/>

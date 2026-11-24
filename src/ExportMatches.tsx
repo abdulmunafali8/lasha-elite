@@ -19,7 +19,7 @@ x.fillStyle="#10224d";x.font=`800 ${Math.round(r*0.8)}px ${FONT}`;x.textAlign="c
 export default function ExportMatches({name,stages,rounds,matches,stageId,roundId,coverUrl,t,onClose,onMsg}:Props){
 const [step,setStep]=useState<"menu"|"scope"|"image">("menu");const [scope,setScope]=useState<"stage"|"round">(roundId?"round":"stage");
 const [wk,setWk]=useState<WK>("DYNAMIC");const [showT,setShowT]=useState(true);const [tt,setTt]=useState(name);const [showR,setShowR]=useState(true);const [rt,setRt]=useState("");
-const [sd,setSd]=useState(false);const [bg,setBg]=useState("#ffffff");const [cov,setCov]=useState(false);const [ab,setAb]=useState(false);
+const [sd,setSd]=useState(false);const [ty,setTy]=useState<"1"|"2"|"3">("1");const [bg,setBg]=useState("#ffffff");const [cov,setCov]=useState(false);const [ab,setAb]=useState(false);
 const cv=useRef<HTMLCanvasElement>(null);const cache=useRef(new Map<string,HTMLImageElement|null>());
 const stage=stages.find(s=>s.id===stageId);const round=rounds.find(r=>r.id===roundId);
 const rn=(rid:string)=>rounds.find(r=>r.id===rid)?.name??"";const ri=(rid:string)=>rounds.findIndex(r=>r.id===rid);
@@ -40,7 +40,7 @@ if(off())return;
 const bgc=/^#[0-9a-f]{6}$/i.test(bg)?bg:"#ffffff";const k=parseInt(bgc.slice(1),16);const light=(0.299*(k>>16)+0.587*((k>>8)&255)+0.114*(k&255))/255>0.55;
 const fg=light?"#333333":"#ffffff",ln=light?"#e4e4e4":"rgba(255,255,255,.28)",gr=light?"#9a9a9a":"#cfd6e6";
 const covH=covImg?280:0;const top=covH+30+(showT?60:0)+(showR?46:0)+14;
-const rowH=CH?Math.max(70,Math.min(200,Math.floor((CH-top-20)/Math.max(n,1)))):165;
+const rowH=ty!=="1"?(CH?Math.max(70,Math.min(130,Math.floor((CH-top-20)/Math.max(n,1)))):120):CH?Math.max(70,Math.min(200,Math.floor((CH-top-20)/Math.max(n,1)))):165;
 const H=CH||top+Math.max(n,1)*rowH+20;c.width=CW;c.height=H;
 const x=c.getContext("2d");if(!x)return;
 x.fillStyle=bgc;x.fillRect(0,0,CW,H);
@@ -52,10 +52,16 @@ const r=Math.min(38,rowH*0.23),cx1=CW*0.17,cx2=CW*0.83,fs=Math.max(20,Math.min(3
 x.strokeStyle=ln;x.lineWidth=2;
 for(let i=0;i<=n;i++){const yy=top+i*rowH;x.beginPath();x.moveTo(0,yy);x.lineTo(CW,yy);x.stroke()}
 list.forEach((m,i)=>{const y0=top+i*rowH,cy=y0+rowH*0.4;
+if(ty!=="1"){const cyy=y0+rowH/2,r2=Math.min(34,rowH*0.3),fs2=Math.max(22,Math.min(32,Math.round(rowH*0.26))),x1=CW/2-150,x2=CW/2+150,gap=r2+16,mw=x1-gap-30;
+if(ty==="3"&&i%2===0){x.fillStyle=light?"rgba(0,0,0,.05)":"rgba(255,255,255,.1)";x.fillRect(0,y0,CW,rowH)}
+crest(x,x1,cyy,r2,String(m.homeName||t.tbd),imgs[i][0]);crest(x,x2,cyy,r2,String(m.awayName||t.tbd),imgs[i][1]);
+x.fillStyle=fg;x.font=`500 ${fs2}px ${FONT}`;x.textBaseline="middle";
+const hn=String(m.homeName||t.tbd),an=String(m.awayName||t.tbd);x.textAlign="right";x.fillText(ab?abbr(hn):hn,x1-gap,cyy,mw);x.textAlign="left";x.fillText(ab?abbr(an):an,x2+gap,cyy,mw);
+const dn=m.status==="done";x.fillStyle=dn?fg:gr;x.font=dn?`800 50px ${FONT}`:`400 26px ${FONT}`;x.textAlign="center";x.fillText(score(m),CW/2,cyy);x.textBaseline="alphabetic";return}
 const sides:[number,string,HTMLImageElement|null][]=[[cx1,String(m.homeName||t.tbd),imgs[i][0]],[cx2,String(m.awayName||t.tbd),imgs[i][1]]];
 sides.forEach(([cx,nm,im])=>{crest(x,cx,cy,r,nm,im);x.fillStyle=fg;x.font=`500 ${fs}px ${FONT}`;x.textAlign="center";x.textBaseline="alphabetic";x.fillText(ab?abbr(nm):nm,cx,y0+rowH*0.82,CW*0.3)});
 const done=m.status==="done";x.fillStyle=done?fg:gr;x.font=done?`800 52px ${FONT}`:`400 26px ${FONT}`;x.textAlign="center";x.textBaseline="middle";x.fillText(score(m),CW/2,y0+rowH*0.52);x.textBaseline="alphabetic"})};
-useEffect(()=>{if(step!=="image")return;let off=false;const c=cv.current;if(c)void draw(c,()=>off);return()=>{off=true}},[step,wk,showT,tt,showR,rt,bg,cov,ab,scope,matches]);
+useEffect(()=>{if(step!=="image")return;let off=false;const c=cv.current;if(c)void draw(c,()=>off);return()=>{off=true}},[step,wk,ty,showT,tt,showR,rt,bg,cov,ab,scope,matches]);
 const blob=()=>new Promise<Blob|null>(res=>{const c=cv.current;if(!c)return res(null);try{c.toBlob(b=>res(b),"image/png")}catch{res(null)}});
 const doOpen=async()=>{const w=window.open("","_blank");const b=await blob();if(!b){w?.close();return onMsg(t.err)}if(w)w.location.href=URL.createObjectURL(b);else save(b,`${name}-${label}.png`);setSd(false)};
 const doShare=async()=>{const b=await blob();if(!b)return onMsg(t.err);const f=new File([b],`${name}-${label}.png`,{type:"image/png"});try{if(typeof navigator.canShare==="function"&&navigator.canShare({files:[f]}))await navigator.share({files:[f],title:name});else save(b,f.name)}catch{/* an soke */}setSd(false)};
@@ -69,6 +75,8 @@ if(step==="scope")return<div className="exscrim" onClick={onClose}><div classNam
 return<div className="exfull"><header className="ch"><div className="chr"><button className="ib" onClick={onClose} aria-label={t.cancel}><Ic d={IC.back}/></button><h1>{t.games}</h1><button className="ib" onClick={()=>setSd(true)} aria-label={t.share}><Ic d={IC.share}/></button></div></header>
 <div className="expv"><canvas ref={cv}/></div>
 <div className="sform">
+<p className="sec dark">{t.exType}</p>
+<select className="tsel" value={ty} onChange={e=>setTy(e.target.value as "1"|"2"|"3")} aria-label={t.exType}>{["1","2","3"].map(k=><option key={k} value={k}>{t.exOpt} {k}</option>)}</select>
 <p className="sec dark">{t.exWidth}</p>
 <div className="wseg">{(Object.keys(SIZES) as WK[]).map(k=><button key={k} type="button" className={wk===k?"on":""} onClick={()=>setWk(k)}>{wk===k?"✓ ":""}{k}</button>)}</div>
 <div className="drow"><input type="checkbox" checked={showT} onChange={e=>setShowT(e.target.checked)}/><label className="fl"><span>{t.exTitle}</span><input value={tt} onChange={e=>setTt(e.target.value)}/></label></div>

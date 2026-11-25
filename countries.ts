@@ -1,1 +1,0 @@
-export const COUNTRIES:[string,string][]=[["NG","Nigeria"],["NE","Niger"],["GH","Ghana"],["CM","Cameroon"],["TD","Chad"],["SN","Senegal"],["ML","Mali"],["BF","Burkina Faso"],["CI","Côte d\'Ivoire"],["TG","Togo"],["BJ","Benin"],["KE","Kenya"],["ZA","South Africa"],["EG","Egypt"],["GB","United Kingdom"],["US","United States"],["BR","Brasil"]];

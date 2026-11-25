@@ -54,11 +54,11 @@ return(<div className="app">
 <h2 className="th-h">{t.appTheme}</h2><p className="sh-sub">{t.themeSub}</p>
 {([["system",t.themeSystem,t.themeSystemD,"M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 18h2"],["light",t.themeLight,t.themeLightD,"M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"],["dark",t.themeDark,t.themeDarkD,"M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"]] as [Theme,string,string,string][]).map(([k,n,s,d])=><button type="button" key={k} className={"th-opt"+(theme===k?" on":"")} onClick={()=>{setTheme(k);setThemeS(k);setDlg("")}}><Ico d={d}/><span><b>{n}</b><small>{s}</small></span>{theme===k&&<i className="th-ck">✓</i>}</button>)}
 </div></div>}
-{dlg==="contacts"&&<div className="mo-wrap" onClick={()=>setDlg("")}><div className="mo-box" role="dialog" aria-label={t.contactsT} onClick={e=>e.stopPropagation()}><h2>{t.contactsT}</h2>
-{SUPPORT.email&&<a className="mo-row" href={"mailto:"+SUPPORT.email}>Email: {SUPPORT.email}</a>}
-{SUPPORT.whatsapp&&<a className="mo-row" href={"https://wa.me/"+SUPPORT.whatsapp.replace(/\D/g,"")} target="_blank" rel="noopener noreferrer">WhatsApp: {SUPPORT.whatsapp}</a>}
-{SUPPORT.telegram&&<a className="mo-row" href={SUPPORT.telegram} target="_blank" rel="noopener noreferrer">Telegram: {SUPPORT.telegram}</a>}
-{!(SUPPORT.email||SUPPORT.whatsapp||SUPPORT.telegram)&&<p className="muted">{t.none}</p>}</div></div>}
+{dlg==="contacts"&&<div className="mo-wrap" onClick={()=>setDlg("")}><div className="ct-box" role="dialog" aria-label={t.contactsT} onClick={e=>e.stopPropagation()}><h2>{t.contactsT}</h2>
+{SUPPORT.email&&<a className="ct-row" href={"mailto:"+SUPPORT.email}><svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><path fill="#d9d4e5" d="M3 5h18a1 1 0 0 1 1 1v.6l-10 6-10-6V6a1 1 0 0 1 1-1zM2 8.9l10 6 10-6V18a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg><span>{SUPPORT.email}</span></a>}
+{SUPPORT.whatsapp&&<a className="ct-row" href={"https://wa.me/"+SUPPORT.whatsapp.replace(/\D/g,"")} target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><path fill="#3dbb4a" d="M5 3h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-5 4V4a1 1 0 0 1 1-1z"/></svg><span>WhatsApp</span></a>}
+{SUPPORT.telegram&&<a className="ct-row" href={SUPPORT.telegram} target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><path fill="#1e88e5" d="M5 3h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-5 4V4a1 1 0 0 1 1-1z"/></svg><span>Telegram</span></a>}
+{!(SUPPORT.email||SUPPORT.whatsapp||SUPPORT.telegram)&&<p className="ct-none">{t.none}</p>}</div></div>}
 {dlg==="loc"&&<div className="mo-wrap" onClick={()=>setDlg("")}><div className="mo-box" role="dialog" aria-label={t.locationT} onClick={e=>e.stopPropagation()}><h2>{t.locationT}</h2>
 {COUNTRIES.map(([k,n])=><button type="button" key={k} className="mo-row" onClick={()=>{setRegion(k);try{localStorage.setItem("region",k)}catch{/* babu ajiya */}setDlg("")}}><b>{n}</b>{region===k&&<span> ✓</span>}</button>)}</div></div>}
 {menu&&<div className="scrim" onClick={close}><nav className="drawer" onClick={e=>e.stopPropagation()}>
@@ -72,8 +72,8 @@ return(<div className="app">
 <p className="dsec">{t.helpSec}</p>
 <Item d={IC.contacts} label={t.contactsT} onClick={()=>{setMenu(false);setDlg("contacts")}}/>
 {SUPPORT.youtube&&<Item d={IC.yt} label={t.ytT} onClick={()=>{close();window.open(SUPPORT.youtube,"_blank","noopener")}}/>}
-{SUPPORT.terms&&<Item d={IC.doc} label={t.termsT} onClick={()=>{close();window.open(SUPPORT.terms,"_blank","noopener")}}/>}
-{SUPPORT.privacy&&<Item d={IC.priv} label={t.privPolicy} onClick={()=>{close();window.open(SUPPORT.privacy,"_blank","noopener")}}/>}
+<Item d={IC.doc} label={t.termsT} onClick={()=>{close();location.hash="#/terms"}}/>
+<Item d={IC.priv} label={t.privPolicy} onClick={()=>{close();location.hash="#/privacy"}}/>
 <p className="dsec">{t.prefs}</p>
 <Item d={IC.pin} label={`${t.locationT}: ${region}`} onClick={()=>{setMenu(false);setDlg("loc")}}/>
 <Item d={IC.globe} label={t.lang} onClick={toggle}/>

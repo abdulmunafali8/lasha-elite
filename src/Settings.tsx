@@ -39,7 +39,7 @@ const upd=(d:Record<string,unknown>)=>updateDoc(doc(db,"competitions",id),d).the
 const set=(k:string,v:string)=>setF(p=>({...p,[k]:v}));
 const saveBasic=async(e:React.FormEvent)=>{e.preventDefault();setMsg("");if(f.name.trim().length<3)return setMsg(t.req+": "+t.ctitle);if(f.start&&f.end&&f.end<f.start)return setMsg(t.endBefore);
 setBusy(true);try{const base=`competitions/${user.uid}/${id}`;const d:Record<string,unknown>={name:f.name.trim(),subhead:f.subhead.trim(),description:f.desc.trim(),startDate:f.start||null,endDate:f.end||null,mode:f.mode,location:f.mode==="person"?f.place.trim():""};
-if(logo)d.logoUrl=await uploadImg(`${base}/logo`,logo);if(cover)d.coverUrl=await uploadImg(`${base}/cover`,cover);await upd(d);setLogo(null);setCover(null)}catch{setMsg(t.err)}finally{setBusy(false)}};
+if(logo)d.logoUrl=await uploadImg(`${base}/logo`,logo);if(cover)d.coverUrl=await uploadImg(`${base}/cover`,cover);await upd(d);setLogo(null);setCover(null)}catch(e){const x=e as {code?:string;message?:string};setMsg(t.err+" ("+(x.code||x.message||"")+")")}finally{setBusy(false)}};
 const editTxt=(k:string)=>{setOpen(open===k?"":k);setDraft(String(c[k]??(k==="color"?"#172B59":"")))};
 const saveTxt=async(k:string)=>{if(k==="color"&&!/^#[0-9a-f]{6}$/i.test(draft))return setMsg(t.badColor);await upd({[k]:draft.trim()});setOpen("")};
 const addStage=async()=>{const n=prompt(t.stageName)?.trim();if(n)await addDoc(collection(db,"competitions",id,"stages"),{name:n,order:Math.max(0,...stages.map(s=>s.order))+1})};

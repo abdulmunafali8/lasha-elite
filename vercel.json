@@ -1,0 +1,3 @@
+{
+  "buildCommand": "node sync-src.mjs && npx vite build"
+}

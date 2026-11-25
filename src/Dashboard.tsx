@@ -2,7 +2,7 @@ import {useEffect,useMemo,useState} from "react";
 import {onAuthStateChanged,User} from "firebase/auth";
 import {collection,doc,getDoc,query,where,orderBy,limit} from "firebase/firestore";
 import {auth,db} from "./firebase";import {useLang} from "./i18n";import {useLive} from "./hooks";
-import "./sheetStyles";import {SUPPORT} from "./support";import {Competition,Organizer,Activity} from "./types";import {getTheme,setTheme} from "./theme";
+import "./sheetStyles";import {SUPPORT} from "./support";import {Competition,Organizer,Activity} from "./types";import {getTheme,setTheme,Theme} from "./theme";
 
 const Logo=({url,name}:{url?:string;name:string})=>url?<img src={url} alt="" loading="lazy"/>:<span className="ph">{name.slice(0,2).toUpperCase()}</span>;
 type L<T>={d:T[];loading:boolean;err:boolean};
@@ -16,13 +16,13 @@ const Item=({d,label,href,onClick,badge}:{d:string;label:string;href?:string;onC
 return href?<a className="ditem" href={href} onClick={onClick}>{body}</a>:<button type="button" className="ditem" onClick={onClick}>{body}</button>};
 
 export default function Dashboard(){
-const {t,toggle,lang}=useLang();const [user,setUser]=useState<User|null>(null);const [q,setQ]=useState("");const [region,setRegion]=useState(()=>{try{return localStorage.getItem("region")||"NG"}catch{return"NG"}});const [menu,setMenu]=useState(false);const [dlg,setDlg]=useState<""|"contacts"|"loc">("");const [fs,setFs]=useState(false);
-const [flt,setFlt]=useState<Flt>(()=>{try{return {...DEF,...JSON.parse(localStorage.getItem("dflt")||"{}")}}catch{return DEF}});const [dr,setDr]=useState<Flt>(DEF);const [theme,setThemeS]=useState(getTheme());const [isAdmin,setIsAdmin]=useState(false);const [ci,setCi]=useState(0);
+const {t,toggle,lang}=useLang();const [user,setUser]=useState<User|null>(null);const [q,setQ]=useState("");const [region,setRegion]=useState(()=>{try{return localStorage.getItem("region")||"NG"}catch{return"NG"}});const [menu,setMenu]=useState(false);const [dlg,setDlg]=useState<""|"contacts"|"loc"|"theme">("");const [moreO,setMoreO]=useState(false);const [fs,setFs]=useState(false);
+const [flt,setFlt]=useState<Flt>(()=>{try{return {...DEF,...JSON.parse(localStorage.getItem("dflt")||"{}")}}catch{return DEF}});const [dr,setDr]=useState<Flt>(DEF);const [theme,setThemeS]=useState<Theme>(getTheme());const [isAdmin,setIsAdmin]=useState(false);const [ci,setCi]=useState(0);
 useEffect(()=>onAuthStateChanged(auth,async u=>{setUser(u);setIsAdmin(false);if(u){try{setIsAdmin((await getDoc(doc(db,"users",u.uid))).data()?.role==="superadmin")}catch{}}}),[]);
 const follow=useLive<Competition>(useMemo(()=>user?query(collection(db,"competitions"),where("followers","array-contains",user.uid)):null,[user]));
 const mine=useLive<Competition>(useMemo(()=>user?query(collection(db,"competitions"),where("ownerId","==",user.uid)):null,[user]));
 const act=useLive<Activity>(useMemo(()=>query(collection(db,"activity"),orderBy("createdAt","desc"),limit(5)),[]));
-const orgs=useLive<Organizer>(useMemo(()=>query(collection(db,"organizers"),where("country","==",flt.c?flt.cv:region),limit(20)),[region,flt.c,flt.cv]));
+const orgs=useLive<Organizer>(useMemo(()=>query(collection(db,"organizers"),where("country","==",flt.c?flt.cv:region),limit(60)),[region,flt.c,flt.cv]));
 const pubc=useLive<Competition>(useMemo(()=>query(collection(db,"competitions"),where("isPrivate","==",false),limit(60)),[]));
 const nots=useLive<{id:string;createdAt?:{toMillis():number}}>(useMemo(()=>query(collection(db,"notifications"),orderBy("createdAt","desc"),limit(20)),[]));
 let seen=0;try{seen=Number(localStorage.getItem("seenN")||0)}catch{}
@@ -50,6 +50,10 @@ return(<div className="app">
 <h3 className="fl-h">{t.flKind}</h3><div className="fl-chips">{(["all","pub","org"] as const).map(k=><button type="button" key={k} className={"fl-chip"+(dr.k===k?" on":"")} onClick={()=>setDr({...dr,k})}>{k==="all"?t.flAllC:k==="pub"?t.flPub:t.orgsShort}</button>)}</div>
 <div className="fl-acts"><button type="button" onClick={()=>{setFlt(DEF);try{localStorage.removeItem("dflt")}catch{/* babu ajiya */}setFs(false)}}>{t.flClear}</button><button type="button" className="go" onClick={()=>{setFlt(dr);try{localStorage.setItem("dflt",JSON.stringify(dr))}catch{/* babu ajiya */}setFs(false)}}>{t.save}</button></div>
 </div></div>}
+{dlg==="theme"&&<div className="sh-wrap" onClick={()=>setDlg("")}><div className="sh-sheet" role="dialog" aria-label={t.appTheme} onClick={e=>e.stopPropagation()}>
+<h2 className="th-h">{t.appTheme}</h2><p className="sh-sub">{t.themeSub}</p>
+{([["system",t.themeSystem,t.themeSystemD,"M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 18h2"],["light",t.themeLight,t.themeLightD,"M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"],["dark",t.themeDark,t.themeDarkD,"M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"]] as [Theme,string,string,string][]).map(([k,n,s,d])=><button type="button" key={k} className={"th-opt"+(theme===k?" on":"")} onClick={()=>{setTheme(k);setThemeS(k);setDlg("")}}><Ico d={d}/><span><b>{n}</b><small>{s}</small></span>{theme===k&&<i className="th-ck">✓</i>}</button>)}
+</div></div>}
 {dlg==="contacts"&&<div className="mo-wrap" onClick={()=>setDlg("")}><div className="mo-box" role="dialog" aria-label={t.contactsT} onClick={e=>e.stopPropagation()}><h2>{t.contactsT}</h2>
 {SUPPORT.email&&<a className="mo-row" href={"mailto:"+SUPPORT.email}>Email: {SUPPORT.email}</a>}
 {SUPPORT.whatsapp&&<a className="mo-row" href={"https://wa.me/"+SUPPORT.whatsapp.replace(/\D/g,"")} target="_blank" rel="noopener noreferrer">WhatsApp: {SUPPORT.whatsapp}</a>}
@@ -73,7 +77,7 @@ return(<div className="app">
 <p className="dsec">{t.prefs}</p>
 <Item d={IC.pin} label={`${t.locationT}: ${region}`} onClick={()=>{setMenu(false);setDlg("loc")}}/>
 <Item d={IC.globe} label={t.lang} onClick={toggle}/>
-<Item d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" label={`${t.appTheme}: ${theme==="dark"?t.themeDark:t.themeLight}`} onClick={()=>{const n=theme==="dark"?"light":"dark";setTheme(n);setThemeS(n)}}/>
+<Item d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" label={`${t.appTheme}: ${theme==="dark"?t.themeDark:theme==="system"?t.themeSystem:t.themeLight}`} onClick={()=>{setMenu(false);setDlg("theme")}}/>
 <p className="dsec">{t.userSec}</p>
 <Item d={IC.bell} label={t.notifs} href="#/notifications" onClick={close} badge={unread}/>
 <Item d={IC.user} label={user?t.account:t.btnIn} href="#/signin" onClick={close}/>
@@ -86,7 +90,7 @@ return(<div className="app">
 <section style={hc}><div className="sh"><h2>{t.recent}</h2><a href="#/activity">{t.all} →</a></div>
 {state(act)??act.d.map(a=><a key={a.id} className="act" href={`#/competition/${a.competitionId}`}><span className="ai">⚽</span>
 <div className="grow"><b>{t.newRes}: "{a.homePlayer}" vs "{a.awayPlayer}"</b><p className="muted">{a.createdAt?ago(a.createdAt.toMillis()):""}</p></div><span className="chev">›</span></a>)}</section>
-<section id="orgs" style={ho}><p className="eyebrow">{t.discover}</p><h2>{t.orgs}</h2><p className="muted">📍 {region}</p>
-{state(orgs)??<div className="grid">{orgs.d.filter(o=>f(o.name)).map(o=><a key={o.id} className="org" href={`#/organizer/${o.id}`}><div className="ol"><Logo url={o.logoUrl} name={o.name}/></div><div><b>{o.name}</b><p className="muted">📍 {o.country}</p></div></a>)}</div>}</section>
+<section id="orgs" style={ho}><p className="eyebrow">{t.discover}</p><h2>{t.orgs}</h2><button type="button" className="orgloc" onClick={()=>setDlg("loc")}>📍 {flt.c?flt.cv:region} ▾</button>
+{state(orgs)??<><div className="grid">{(moreO?orgs.d.filter(o=>f(o.name)):orgs.d.filter(o=>f(o.name)).slice(0,8)).map(o=><a key={o.id} className="org" href={`#/organizer/${o.id}`}><div className="ol"><Logo url={o.logoUrl} name={o.name}/></div><div><b>{o.name}</b><p className="muted">📍 {o.country}</p></div></a>)}</div>{!moreO&&orgs.d.filter(o=>f(o.name)).length>8&&<button type="button" className="orgmore" onClick={()=>setMoreO(true)}>{t.exploreOrgs} →</button>}</>}</section>
 {user&&<section style={hc}><div className="sh"><h2>{t.mine}</h2></div>{cards(mine)}</section>}
 </main></div>)}

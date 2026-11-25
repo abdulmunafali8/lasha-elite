@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from "react";
 import {onAuthStateChanged,User} from "firebase/auth";
-import {collection,doc,onSnapshot,updateDoc,addDoc,deleteDoc,getDocs,query,where,orderBy} from "firebase/firestore";
-import {auth,db,uploadImg} from "./firebase";import {useLang} from "./i18n";import {useLive} from "./hooks";import ImagePick from "./ImagePick";import Players from "./Players";import Teams from "./Teams";import Groups from "./Groups";import {Stage} from "./types";import Moderators,{Mod,FInfo} from "./Moderators";
+import {collection,doc,onSnapshot,updateDoc,addDoc,deleteDoc,getDocs,query,where,orderBy,writeBatch} from "firebase/firestore";
+import {auth,db,uploadImg} from "./firebase";import {useLang} from "./i18n";import {useLive} from "./hooks";import ImagePick from "./ImagePick";import Players from "./Players";import Teams from "./Teams";import Groups from "./Groups";import {Stage} from "./types";import {SUPPORT} from "./support";import Moderators,{Mod,FInfo} from "./Moderators";
 type C={id:string;name:string;subhead?:string;description?:string;startDate?:string|null;endDate?:string|null;mode?:string;location?:string;isPrivate?:boolean;status?:string;ownerId:string;logoUrl?:string;coverUrl?:string}&Record<string,unknown>;
 const TXT:[string,string][]=[["contacts","contacts"],["color","color"],["rules","rules"],["awards","awards"],["website","site"]];
 const IC:Record<string,string>={back:"M19 12H5M12 5l-7 7 7 7",cal:"M7 3v3M17 3v3M4 8h16M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM8 13h3v3H8z",
@@ -16,7 +16,7 @@ status:"M12 8v4l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18",mods:"M12 3l8 3v6c0 5-3
 const Ic=({d,s=24}:{d:string;s?:number})=><svg viewBox="0 0 24 24" width={s} height={s} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d}/></svg>;
 const SOON=["referees","places","rating","regs","pRanking","tResult"];
 export default function Settings({id}:{id:string}){
-const {t}=useLang();const [user,setUser]=useState<User|null|undefined>(undefined);const [c,setC]=useState<C|null>(null);const [msg,setMsg]=useState("");
+const {t}=useLang();const [user,setUser]=useState<User|null|undefined>(undefined);const [c,setC]=useState<C|null>(null);const [msg,setMsg]=useState("");const [rmBusy,setRmBusy]=useState(false);
 const [f,setF]=useState({name:"",subhead:"",desc:"",start:"",end:"",mode:"person",place:""});const [ready,setReady]=useState(false);
 const [logo,setLogo]=useState<File|null>(null);const [cover,setCover]=useState<File|null>(null);const [busy,setBusy]=useState(false);const [open,setOpen]=useState(()=>{try{const v=sessionStorage.getItem("openSec")||"";sessionStorage.removeItem("openSec");return v}catch{return ""}});const jumped=useRef(false);const [draft,setDraft]=useState("");
 useEffect(()=>onAuthStateChanged(auth,setUser),[]);
@@ -29,6 +29,12 @@ const back=<header className="ch"><div className="chr"><a className="ib" href={`
 if(user===undefined||!c)return<div className="app">{back}<p className="muted pad">{t.loading}</p></div>;
 const modP=user?(c.mods as Record<string,Mod>|undefined)?.[user.uid]:undefined;
 if(!user||(user.uid!==c.ownerId&&!modP?.tournament))return<div className="app">{back}<p className="toast">{t.notOwner}</p></div>;
+const removeAll=async()=>{if(!confirm(t.rmSure))return;setRmBusy(true);
+const wipeSub=async(cid:string,sub:string)=>{const s=await getDocs(collection(db,"competitions",cid,sub));
+if(sub==="posts")for(const p of s.docs){try{const cs=await getDocs(collection(db,"competitions",cid,"posts",p.id,"comments"));for(const x of cs.docs)await deleteDoc(x.ref)}catch{/* babu izini */}}
+for(let i=0;i<s.docs.length;i+=400){const b=writeBatch(db);s.docs.slice(i,i+400).forEach(d=>b.delete(d.ref));await b.commit()}};
+const wipe=async(cid:string)=>{for(const sub of ["matches","rounds","stages","groups","players","posts","messages"])await wipeSub(cid,sub);await deleteDoc(doc(db,"competitions",cid))};
+try{const kids=await getDocs(query(collection(db,"competitions"),where("parentId","==",id)));for(const k of kids.docs)await wipe(k.id);await wipe(id);location.hash="#/organize"}catch{setMsg(t.err);setRmBusy(false)}};
 const upd=(d:Record<string,unknown>)=>updateDoc(doc(db,"competitions",id),d).then(()=>setMsg(t.saved)).catch(e=>{setMsg(t.err+" ("+((e as {code?:string}).code??"")+")")});
 const set=(k:string,v:string)=>setF(p=>({...p,[k]:v}));
 const saveBasic=async(e:React.FormEvent)=>{e.preventDefault();setMsg("");if(f.name.trim().length<3)return setMsg(t.req+": "+t.ctitle);if(f.start&&f.end&&f.end<f.start)return setMsg(t.endBefore);
@@ -64,4 +70,6 @@ return(<div className="app">{back}{msg&&<p className={"toast"+(msg===t.saved?" o
 <div className="srow2"><span className="ri"><Ic d={IC.views}/></span><span className="rl">{t.views} ({Number(c.views)||0})</span></div>
 <div className="srow2"><span className="ri"><Ic d={IC.players}/></span><span className="rl">{t.followersT} ({Array.isArray(c.followers)?c.followers.length:0})</span></div>
 <label className="srow2 sp"><span className="ri"><Ic d={IC.media}/></span><span className="rl"><b>{t.userMedia}</b><br/><small className="muted">{t.userMediaT}</small></span><input className="sw" type="checkbox" role="switch" checked={!!c.allowMedia} onChange={e=>upd({allowMedia:e.target.checked})}/></label>
-<label className="srow2 sp"><span className="ri"><Ic d={IC.comments}/></span><span className="rl">{t.allowComments}</span><input className="sw" type="checkbox" role="switch" checked={c.allowComments!==false} onChange={e=>upd({allowComments:e.target.checked})}/></label></div></div>)}
+<label className="srow2 sp"><span className="ri"><Ic d={IC.comments}/></span><span className="rl">{t.allowComments}</span><input className="sw" type="checkbox" role="switch" checked={c.allowComments!==false} onChange={e=>upd({allowComments:e.target.checked})}/></label>
+{user.uid===c.ownerId&&<button type="button" className="rmbtn" disabled={rmBusy} onClick={removeAll}>{rmBusy?t.saving:t.rmT}</button>}
+{(SUPPORT.email||SUPPORT.whatsapp||SUPPORT.telegram)&&<div className="sup"><h3>{t.doubts}</h3>{SUPPORT.email&&<a href={"mailto:"+SUPPORT.email}>Email: {SUPPORT.email}</a>}{SUPPORT.whatsapp&&<a href={"https://wa.me/"+SUPPORT.whatsapp.replace(/\D/g,"")} target="_blank" rel="noopener noreferrer">WhatsApp: {SUPPORT.whatsapp}</a>}{SUPPORT.telegram&&<a href={SUPPORT.telegram} target="_blank" rel="noopener noreferrer">Telegram: {SUPPORT.telegram}</a>}</div>}</div></div>)}

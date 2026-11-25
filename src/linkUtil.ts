@@ -8,3 +8,5 @@ for(let i=0;i<6;i++){const c=newCode();const s=await getDocs(query(collection(db
 throw new Error("code")}
 /** Hanyar haɗin gasa: gajere idan gasar tana da code, in ba haka ba ta id. */
 export const linkFor=(id:string,code?:string)=>location.origin+location.pathname+(code?"#/c/"+code:"#/competition/"+id);
+/** Ƙasar da aka zaɓa a Location (don sa wa sababbin gasa alama, domin tacewa). */
+export const defaultCountry=()=>{try{return localStorage.getItem("region")||"NG"}catch{return"NG"}};

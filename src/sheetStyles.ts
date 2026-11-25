@@ -65,6 +65,8 @@ const css=`
 .og-row{display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid #1b2a44;color:#fff;text-decoration:none;font-weight:800;text-transform:uppercase}
 .og-row span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .og-ci{width:54px;height:54px;border-radius:50%;object-fit:cover;background:#16286b;display:grid;place-items:center;flex:none;font-size:1rem}
+.og-lab{display:block;margin:12px 0 2px;font-weight:700;font-size:.95rem;color:#b9c3e0}
+.og-in{width:100%;box-sizing:border-box;border:1px solid #33446f;background:#0e1730;color:#fff;border-radius:12px;padding:14px;font:inherit;font-size:1.1rem}.og-in option{color:#000}
 .og-muted{color:#9aa6c0;font-weight:600}
 .rmbtn{display:block;margin:22px auto 8px;background:#ff5252;color:#fff;border:0;border-radius:999px;padding:14px 26px;font:inherit;font-weight:800;font-size:1.2rem;cursor:pointer}.rmbtn:disabled{opacity:.6}
 .sup{text-align:center;margin:20px 0 28px;color:var(--navy)}.sup h3{margin:0 0 10px;font-size:1.5rem}.sup a{display:block;margin:10px 0;color:inherit;font-weight:700;font-size:1.1rem;text-decoration:none}

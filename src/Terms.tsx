@@ -1,5 +1,4 @@
-import "./sheetStyles";
-import {SUPPORT} from "./support";
+import LegalDoc from "./LegalDoc";
 const VERSION="1.0";const UPDATED="November 25, 2026";
 const S:[string,string[]][]=[
 ["Acceptance",["By accessing or using Lasha Elite League Manager (the “Service”), whether as a visitor, follower, organizer or moderator, you agree to these Terms and Conditions of Use (the “Terms”).","If you do not agree with the Terms, please do not use the Service."]],
@@ -21,15 +20,4 @@ const S:[string,string[]][]=[
 ["Applicable law",["These Terms are governed by the laws of the Federal Republic of Nigeria, and the courts of Nigeria have jurisdiction, without affecting any mandatory consumer rights you may have where you live."]],
 ["Contact",[]],
 ];
-const go=(n:number)=>document.getElementById("tm"+n)?.scrollIntoView({behavior:"smooth",block:"start"});
-export default function Terms(){
-return<div className="tm">
-<header className="tm-hd"><a className="tm-back" href="#/" aria-label="Back">←</a><h1>Terms and Conditions of Use</h1><p>Version {VERSION} · Last updated: {UPDATED}</p></header>
-<nav className="tm-card tm-toc" aria-label="Contents"><h2>In this document</h2>
-{S.map(([t],i)=><button type="button" key={t} onClick={()=>go(i+1)}><b>{String(i+1).padStart(2,"0")}</b><span>{t}</span></button>)}</nav>
-{S.map(([t,ps],i)=><section className="tm-card tm-sec" id={"tm"+(i+1)} key={t}><h3><b>{String(i+1).padStart(2,"0")}</b>{t}</h3>
-{ps.map((p,k)=><p key={k}>{p}</p>)}
-{i===S.length-1&&<>{SUPPORT.email&&<p>Email: <a href={"mailto:"+SUPPORT.email}>{SUPPORT.email}</a></p>}{SUPPORT.whatsapp&&<p>WhatsApp: <a href={"https://wa.me/"+SUPPORT.whatsapp.replace(/\D/g,"")} target="_blank" rel="noopener noreferrer">{SUPPORT.whatsapp}</a></p>}{SUPPORT.telegram&&<p>Telegram: <a href={SUPPORT.telegram} target="_blank" rel="noopener noreferrer">{SUPPORT.telegram}</a></p>}</>}
-</section>)}
-<p className="tm-foot">Lasha Elite League Manager · v{VERSION}</p>
-</div>}
+export default function Terms(){return<LegalDoc title="Terms and Conditions of Use" version={VERSION} updated={UPDATED} sections={S}/>}

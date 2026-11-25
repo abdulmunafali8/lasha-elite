@@ -73,7 +73,7 @@ return(<div className="app">
 <Item d={IC.contacts} label={t.contactsT} onClick={()=>{setMenu(false);setDlg("contacts")}}/>
 {SUPPORT.youtube&&<Item d={IC.yt} label={t.ytT} onClick={()=>{close();window.open(SUPPORT.youtube,"_blank","noopener")}}/>}
 <Item d={IC.doc} label={t.termsT} onClick={()=>{close();location.hash="#/terms"}}/>
-{SUPPORT.privacy&&<Item d={IC.priv} label={t.privPolicy} onClick={()=>{close();window.open(SUPPORT.privacy,"_blank","noopener")}}/>}
+<Item d={IC.priv} label={t.privPolicy} onClick={()=>{close();location.hash="#/privacy"}}/>
 <p className="dsec">{t.prefs}</p>
 <Item d={IC.pin} label={`${t.locationT}: ${region}`} onClick={()=>{setMenu(false);setDlg("loc")}}/>
 <Item d={IC.globe} label={t.lang} onClick={toggle}/>

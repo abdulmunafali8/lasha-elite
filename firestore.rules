@@ -70,7 +70,14 @@ match /competitions/{id}{
   }
 }
 
-match /organizers/{id}{allow read:if true;allow write:if request.auth!=null&&(request.auth.uid==id||admin());}
+match /organizers/{id}{
+  allow read:if true;
+  allow write:if request.auth!=null&&(request.auth.uid==id||admin());
+  // Followers: any signed-in user may follow / unfollow (1 at a time)
+  allow update:if request.auth!=null
+    &&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followers'])
+    &&request.resource.data.followers.size()<=resource.data.get('followers',[]).size()+1;
+}
 match /activity/{id}{allow read:if true;allow create:if request.auth!=null;}
 match /notifications/{id}{allow read:if true;allow create,delete:if admin();}
 match /adminLogs/{id}{allow read,create:if admin();}

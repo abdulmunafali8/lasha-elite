@@ -1,9 +1,9 @@
-/** Bayanan taimako da hanyoyin haɗi. Ku cika waɗanda kuke so; waɗanda ba a cika ba ba za su fito ba. */
+/** Bayanan taimako da hanyoyin haɗi. Waɗanda ba a cika ba ba za su fito ba. */
 export const SUPPORT:{email?:string;whatsapp?:string;telegram?:string;youtube?:string;terms?:string;privacy?:string}={
-email:"",
-whatsapp:"",
-telegram:"",
-youtube:"",
+email:"lashaeliteapp@gmail.com",
+whatsapp:"+2349161364895",
+telegram:"https://t.me/lashaelite",
+youtube:"https://www.youtube.com/@lashaelite",
 terms:"",
 privacy:""
 };

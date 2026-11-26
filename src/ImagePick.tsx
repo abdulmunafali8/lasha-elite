@@ -20,42 +20,56 @@ const g=c.createLinearGradient(0,0,w,h);g.addColorStop(0,a);g.addColorStop(1,b);
 c.fillStyle="rgba(255,255,255,.07)";for(let x=-h;x<w;x+=h/2){c.beginPath();c.moveTo(x,h);c.lineTo(x+h/4,h);c.lineTo(x+h/4+h,0);c.lineTo(x+h,0);c.closePath();c.fill()}
 c.strokeStyle="rgba(255,255,255,.35)";c.lineWidth=Math.max(2,w/300);c.beginPath();c.arc(w/2,h/2,h*.3,0,Math.PI*2);c.stroke();c.beginPath();c.moveTo(w/2,0);c.lineTo(w/2,h);c.stroke();return cv}
 
-/* Crop dialog: drag to move, pinch or slider to zoom. Output is bounded (<2 MB) */
+/* Crop dialog (Copa Fácil style): whole image shown, with a movable + resizable crop box (grid + corner handles) */
+type Box={x:number;y:number;w:number;h:number};
 function Cropper({src,ar,round,onCancel,onBad,onDone}:{src:string;ar:number;round:boolean;onCancel:()=>void;onBad:()=>void;onDone:(f:File)=>void}){
 const {t}=useLang();
-const fw=Math.min(window.innerWidth-48,560),fh=Math.round(fw/ar);
-const [img,setImg]=useState<HTMLImageElement|null>(null);const [z,setZ]=useState(1);const [busy,setBusy]=useState(false);
-const pos=useRef({x:0,y:0,z:1});const [,tick]=useState(0);
-const pts=useRef(new Map<number,{x:number;y:number}>());const box=useRef<HTMLDivElement>(null);
-const minS=img?Math.max(fw/img.naturalWidth,fh/img.naturalHeight):1;
+const [img,setImg]=useState<HTMLImageElement|null>(null);const [busy,setBusy]=useState(false);const [,tick]=useState(0);
+const aw=Math.min(window.innerWidth-44,640),ah=Math.round(window.innerHeight*.88)-110;
+const box=useRef<Box>({x:0,y:0,w:0,h:0});const wrap=useRef<HTMLDivElement>(null);
+const drag=useRef<{m:string;px:number;py:number;b:Box}|null>(null);
+const d=img?Math.min(aw/img.naturalWidth,ah/img.naturalHeight):1;
+const dw=img?Math.round(img.naturalWidth*d):0,dh=img?Math.round(img.naturalHeight*d):0;
 useEffect(()=>{let ok=true;const i=new Image();
-i.onload=()=>{if(!ok)return;const s0=Math.max(fw/i.naturalWidth,fh/i.naturalHeight);pos.current={x:(fw-i.naturalWidth*s0)/2,y:(fh-i.naturalHeight*s0)/2,z:1};setImg(i)};
+i.onload=()=>{if(!ok)return;const k=Math.min(aw/i.naturalWidth,ah/i.naturalHeight);const W=Math.round(i.naturalWidth*k),H=Math.round(i.naturalHeight*k);
+let w=W,h=w/ar;if(h>H){h=H;w=h*ar}box.current={x:(W-w)/2,y:(H-h)/2,w,h};setImg(i)};
 i.onerror=()=>{if(ok)onBad()};i.src=src;return()=>{ok=false}},[src]);
-const put=(x:number,y:number,zz:number)=>{if(!img)return;const zc=Math.min(5,Math.max(1,zz));const s=minS*zc;const w=img.naturalWidth*s,h=img.naturalHeight*s;
-pos.current={x:Math.min(0,Math.max(fw-w,x)),y:Math.min(0,Math.max(fh-h,y)),z:zc};setZ(zc);tick(n=>n+1)};
-const zoomAt=(zz:number,px:number,py:number)=>{const o=pos.current;const s0=minS*o.z;const ix=(px-o.x)/s0,iy=(py-o.y)/s0;const zc=Math.min(5,Math.max(1,zz));const s1=minS*zc;put(px-ix*s1,py-iy*s1,zc)};
-const down=(e:React.PointerEvent<HTMLDivElement>)=>{e.currentTarget.setPointerCapture(e.pointerId);pts.current.set(e.pointerId,{x:e.clientX,y:e.clientY})};
-const move=(e:React.PointerEvent<HTMLDivElement>)=>{const m=pts.current;const a=m.get(e.pointerId);if(!a||!img)return;const n={x:e.clientX,y:e.clientY};
-if(m.size===1){const o=pos.current;put(o.x+n.x-a.x,o.y+n.y-a.y,o.z)}
-else if(m.size===2){const other=Array.from(m.entries()).find(([k])=>k!==e.pointerId)![1];const d0=Math.hypot(a.x-other.x,a.y-other.y)||1;const d1=Math.hypot(n.x-other.x,n.y-other.y);const r=box.current!.getBoundingClientRect();
-zoomAt(pos.current.z*d1/d0,(n.x+other.x)/2-r.left,(n.y+other.y)/2-r.top)}
-m.set(e.pointerId,n)};
-const up=(e:React.PointerEvent<HTMLDivElement>)=>{pts.current.delete(e.pointerId)};
-const go=()=>{if(!img||busy)return;setBusy(true);const o=pos.current;const s=minS*o.z;const ow=round?400:1600;const oh=Math.round(ow/ar);
+const down=(e:React.PointerEvent<HTMLDivElement>)=>{if(!img)return;const r=e.currentTarget.getBoundingClientRect();const lx=e.clientX-r.left,ly=e.clientY-r.top,Z=36;
+const l=lx<Z,rt=lx>r.width-Z,tp=ly<Z,bt=ly>r.height-Z;const m=(tp||bt)&&(l||rt)?(tp?"t":"b")+(l?"l":"r"):"move";
+e.currentTarget.setPointerCapture(e.pointerId);drag.current={m,px:e.clientX,py:e.clientY,b:{...box.current}}};
+const move=(e:React.PointerEvent<HTMLDivElement>)=>{const g=drag.current;if(!g||!wrap.current)return;const b=g.b;
+if(g.m==="move"){box.current={...b,x:Math.min(dw-b.w,Math.max(0,b.x+e.clientX-g.px)),y:Math.min(dh-b.h,Math.max(0,b.y+e.clientY-g.py))}}
+else{const r=wrap.current.getBoundingClientRect();const px=e.clientX-r.left,py=e.clientY-r.top;
+const right=g.m[1]==="r",bot=g.m[0]==="b";const ax=right?b.x:b.x+b.w,ay=bot?b.y:b.y+b.h;
+const sx=Math.max(0,right?px-ax:ax-px),sy=Math.max(0,bot?py-ay:ay-py);
+let nw=(sx+sy*ar)/2;nw=Math.min(nw,right?dw-ax:ax,(bot?dh-ay:ay)*ar);nw=Math.max(nw,Math.min(80,dw,dh*ar));const nh=nw/ar;
+box.current={x:right?ax:ax-nw,y:bot?ay:ay-nh,w:nw,h:nh}}
+tick(n=>n+1)};
+const up=()=>{drag.current=null};
+const go=()=>{if(!img||busy)return;setBusy(true);const b=box.current;const k=img.naturalWidth/dw;const ow=round?400:1600,oh=Math.round(ow/ar);
 const c=document.createElement("canvas");c.width=ow;c.height=oh;const g=c.getContext("2d")!;g.imageSmoothingQuality="high";
-g.drawImage(img,-o.x/s,-o.y/s,fw/s,fh/s,0,0,ow,oh);const type=round?"image/png":"image/jpeg";
-const tryQ=(q:number)=>c.toBlob(b=>{if(!b){onBad();return}if(b.size>=1.9*1024*1024&&q>.45){tryQ(q-.15);return}if(b.size>=2*1024*1024){onBad();return}onDone(new File([b],round?"logo.png":"cover.jpg",{type}))},type,q);
+g.drawImage(img,b.x*k,b.y*k,b.w*k,b.h*k,0,0,ow,oh);const type=round?"image/png":"image/jpeg";
+const tryQ=(q:number)=>c.toBlob(bl=>{if(!bl){onBad();return}if(bl.size>=1.9*1024*1024&&q>.45){tryQ(q-.15);return}if(bl.size>=2*1024*1024){onBad();return}onDone(new File([bl],round?"logo.png":"cover.jpg",{type}))},type,q);
 tryQ(.9)};
-const btn={background:"none",border:0,font:"inherit",fontWeight:700,fontSize:17,padding:"8px 4px",cursor:"pointer"} as const;
-return createPortal(<div style={{position:"fixed",inset:0,zIndex:100000,background:"rgba(0,0,0,.7)",display:"grid",placeItems:"center",padding:16}}>
-<div role="dialog" aria-label={t.cropImg} style={{background:"#fff",color:"#111",borderRadius:24,padding:16,width:fw+32,maxWidth:"100%"}}>
-<div ref={box} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} style={{width:fw,height:fh,margin:"0 auto",overflow:"hidden",position:"relative",touchAction:"none",background:"#e5e7eb",borderRadius:round?"50%":8,cursor:"grab"}}>
-{img&&<img src={src} alt="" draggable={false} style={{position:"absolute",left:0,top:0,maxWidth:"none",width:img.naturalWidth,height:img.naturalHeight,transformOrigin:"0 0",transform:`translate(${pos.current.x}px,${pos.current.y}px) scale(${minS*pos.current.z})`,userSelect:"none",pointerEvents:"none"}}/>}
+const b=box.current;
+const btn:React.CSSProperties={background:"none",border:0,font:"inherit",fontWeight:700,fontSize:20,padding:"10px 8px",cursor:"pointer"};
+const line:React.CSSProperties={position:"absolute",background:"#fff"};
+return createPortal(<div style={{position:"fixed",inset:0,zIndex:100000,background:"rgba(0,0,0,.55)"}}>
+<div role="dialog" aria-label={t.cropImg} style={{position:"absolute",left:10,right:10,top:"6vh",bottom:"5vh",maxWidth:700,margin:"0 auto",background:"#fff",color:"#111",borderRadius:28,display:"flex",flexDirection:"column"}}>
+<div style={{flex:1,minHeight:0,display:"grid",placeItems:"center",overflow:"hidden"}}>
+{img&&<div ref={wrap} style={{position:"relative",width:dw,height:dh,overflow:"hidden",userSelect:"none"}}>
+<img src={src} alt="" draggable={false} style={{width:dw,height:dh,display:"block",pointerEvents:"none"}}/>
+<div onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} style={{position:"absolute",left:b.x,top:b.y,width:b.w,height:b.h,boxSizing:"border-box",border:"2px solid #fff",boxShadow:"0 0 0 9999px rgba(255,255,255,.6)",touchAction:"none",cursor:"move"}}>
+<i style={{...line,left:"33.33%",top:0,bottom:0,width:2}}/><i style={{...line,left:"66.66%",top:0,bottom:0,width:2}}/>
+<i style={{...line,top:"33.33%",left:0,right:0,height:2}}/><i style={{...line,top:"66.66%",left:0,right:0,height:2}}/>
+{["tl","tr","bl","br"].map(c=>{const T=c[0]==="t",L=c[1]==="l";const p:React.CSSProperties={top:T?-2:undefined,bottom:T?undefined:-2,left:L?-2:undefined,right:L?undefined:-2};
+return <span key={c}><i style={{...line,...p,width:32,height:6}}/><i style={{...line,...p,width:6,height:32}}/></span>})}
+</div></div>}
 </div>
-<input type="range" min={1} max={5} step={0.01} value={z} disabled={!img} onChange={e=>zoomAt(+e.target.value,fw/2,fh/2)} style={{width:"100%",margin:"16px 0 8px"}}/>
-<div style={{display:"flex",justifyContent:"flex-end",gap:24}}>
+<div style={{display:"flex",alignItems:"center",gap:18,padding:"10px 22px 18px"}}>
+<span style={{color:"#b7bcc8",display:"flex",flex:1}} aria-hidden="true"><svg viewBox="0 0 24 24" width="34" height="34" fill="currentColor"><path d="M17 15h2V7c0-1.1-.9-2-2-2H9v2h8v8zM7 17V1H5v4H1v2h4v10c0 1.1.9 2 2 2h10v4h2v-4h4v-2H7z"/></svg></span>
 <button type="button" style={{...btn,color:"#e53935"}} onClick={onCancel}>{t.cancel}</button>
-<button type="button" style={{...btn,color:"#1e88e5",opacity:img&&!busy?1:.5}} disabled={!img||busy} onClick={go}>{t.cropImg}</button>
+<button type="button" style={{...btn,color:"#2196f3",opacity:img&&!busy?1:.5}} disabled={!img||busy} onClick={go}>{t.cropImg}</button>
 </div></div></div>,document.body)}
 
 export default function ImagePick({label,hint,file,onFile,onErr,current,round}:{label:string;hint:string;file:File|null;onFile:(f:File|null)=>void;onErr:(s:string)=>void;current?:string;round?:boolean}){

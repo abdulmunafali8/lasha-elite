@@ -35,7 +35,7 @@ html[data-theme="dark"] .mu{--bg:#0b1424;--card:#111d33;--ink:#e8edf8;--mu:#9aa6
 .mu *,.mu *::before,.mu *::after{box-sizing:border-box}
 .mu-wrap{max-width:560px;margin:0 auto;padding:0 16px}
 .mu-bar{display:flex;align-items:center;gap:12px;padding:calc(14px + env(safe-area-inset-top,0px)) 0 8px}
-.mu-bar h1{margin:0;font-size:1.2rem;font-weight:800;letter-spacing:.1px}
+.mu .mu-bar h1{color:var(--ink);margin:0;font-size:1.2rem;font-weight:800;letter-spacing:.1px}
 .mu-back{width:44px;height:44px;border-radius:50%;border:1px solid var(--ln);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0}
 .mu button:focus-visible,.mu input:focus-visible,.mu a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .mu-pass{position:relative;overflow:hidden;margin-top:10px;border-radius:26px;padding:22px 20px 24px;color:#fff;background:linear-gradient(135deg,#10224d 0%,#1d3a7a 100%);box-shadow:0 18px 40px -18px rgba(16,34,77,.7)}
@@ -55,12 +55,12 @@ html[data-theme="dark"] .mu{--bg:#0b1424;--card:#111d33;--ink:#e8edf8;--mu:#9aa6
 .mu-ring .p{stroke:var(--gold);stroke-linecap:round;transition:stroke-dashoffset .2s linear}
 .mu-shade{position:absolute;inset:0;border-radius:50%;background:rgba(8,16,40,.6);display:grid;place-items:center;color:#fff;font-size:1.1rem;font-weight:800;pointer-events:none}
 .mu-id{min-width:0}
-.mu-id h2{margin:0;font-size:1.45rem;line-height:1.15;font-weight:800;overflow-wrap:anywhere}
-.mu-id p{margin:6px 0 0;font-size:.92rem;color:rgba(255,255,255,.78);overflow-wrap:anywhere}
+.mu .mu-id h2{color:#fff!important;margin:0;font-size:1.45rem;line-height:1.15;font-weight:800;overflow-wrap:anywhere}
+.mu .mu-id p{margin:6px 0 0;font-size:.92rem;color:rgba(255,255,255,.8)!important;overflow-wrap:anywhere}
 .mu-chips{position:relative;display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
 .mu-chips span{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.14);font-size:.82rem;font-weight:600}
 .mu-form{margin-top:28px}
-.mu-form h3{margin:0 0 4px;font-size:1.02rem;font-weight:800}
+.mu .mu-form h3{color:var(--ink);margin:0 0 4px;font-size:1.02rem;font-weight:800}
 .mu-f{position:relative;margin-top:14px}
 .mu .mu-f input{width:100%;height:58px;padding:24px 44px 6px 15px;border-radius:14px;border:1.5px solid var(--ln);background:var(--card);color:var(--ink);font:inherit;font-size:1.02rem;outline:0;transition:border-color .15s,box-shadow .15s}
 .mu .mu-f input:focus{border-color:var(--royal);box-shadow:0 0 0 4px rgba(42,74,143,.18)}
@@ -95,7 +95,7 @@ html[data-theme="dark"] .mu-row .ic{color:#9db8f0;background:rgba(157,184,240,.1
 @keyframes musl{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 .mu-grab{width:44px;height:5px;border-radius:3px;background:var(--ln);margin:0 auto 18px}
 .mu-warn{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(217,45,58,.12);color:var(--bad)}
-.mu-sheet h3{margin:14px 0 6px;font-size:1.25rem;font-weight:800}
+.mu .mu-sheet h3{color:var(--ink);margin:14px 0 6px;font-size:1.25rem;font-weight:800}
 .mu-sheet p{margin:0;color:var(--mu);font-size:.95rem;line-height:1.5}
 .mu-ack{display:flex;align-items:flex-start;gap:12px;margin-top:18px;font-size:.95rem;cursor:pointer}
 .mu-ack input{width:22px;height:22px;margin:0;accent-color:var(--bad);flex:none}
@@ -110,7 +110,7 @@ html[data-theme="dark"] .mu-row .ic{color:#9db8f0;background:rgba(157,184,240,.1
 @keyframes mut{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
 .mu-out{margin-top:24px;padding:30px 22px;border-radius:24px;border:1px dashed var(--ln);text-align:center}
 .mu-out .ic{width:64px;height:64px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:rgba(42,74,143,.13);color:var(--royal)}
-.mu-out h2{margin:0 0 6px;font-size:1.2rem}.mu-out p{margin:0 0 20px;color:var(--mu)}
+.mu .mu-out h2{color:var(--ink);margin:0 0 6px;font-size:1.2rem}.mu-out p{margin:0 0 20px;color:var(--mu)}
 .mu-out a{display:inline-flex;align-items:center;justify-content:center;min-width:160px;height:52px;padding:0 24px;border-radius:16px;background:linear-gradient(135deg,var(--navy),var(--royal));color:#fff;font-weight:800;text-decoration:none}
 .mu-sk{margin-top:10px;border-radius:26px;height:190px;background:linear-gradient(90deg,var(--ln) 0,rgba(255,255,255,.35) 50%,var(--ln) 100%);background-size:200% 100%;animation:musk 1.2s linear infinite}
 @keyframes musk{to{background-position:-200% 0}}

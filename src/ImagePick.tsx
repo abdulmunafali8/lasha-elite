@@ -88,8 +88,10 @@ export default function ImagePick({label,hint,file,onFile,onErr,current,round}:{
 const {t}=useLang();
 const [url,setUrl]=useState<string|undefined>(current);const [open,setOpen]=useState(false);const [lib,setLib]=useState(false);
 const [crop,setCrop]=useState<string|null>(null);
+const [ratio,setRatio]=useState<number|null>(null);
 const cam=useRef<HTMLInputElement>(null);const gal=useRef<HTMLInputElement>(null);
 useEffect(()=>{if(!file){setUrl(current);return}const u=URL.createObjectURL(file);setUrl(u);return()=>URL.revokeObjectURL(u)},[file,current]);
+useEffect(()=>{if(!url||round){setRatio(null);return}let ok=true;const i=new Image();i.onload=()=>{if(ok&&i.naturalHeight)setRatio(i.naturalWidth/i.naturalHeight)};i.src=url;return()=>{ok=false}},[url,round]);
 const n=round?PAL.length:COV.length;
 const thumbs=useMemo(()=>lib?Array.from({length:n},(_,i)=>(round?drawLogo(i,120):drawCover(i,360)).toDataURL("image/png")):[],[lib,round,n]);
 const done=()=>{setOpen(false);setLib(false)};
@@ -97,7 +99,7 @@ const pick=(e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];e.tar
 if(!f.type.startsWith("image/")){onErr("imgBad");return}setCrop(URL.createObjectURL(f))};
 const pickLib=(i:number)=>(round?drawLogo(i,400):drawCover(i,1200)).toBlob(b=>{if(b){onFile(new File([b],"library.png",{type:"image/png"}));done()}},"image/png");
 return(<>
-<button type="button" className={"ipick"+(round?" r":"")} aria-label={label} style={url?{backgroundImage:`url(${url})`}:undefined} onClick={()=>setOpen(true)}>{!url&&<span>＋<br/>{label}<br/><small>{hint}</small></span>}</button>
+<button type="button" className={"ipick"+(round?" r":"")} aria-label={label} style={url?{backgroundImage:`url(${url})`,...(!round&&ratio?{aspectRatio:String(ratio),height:"auto",maxHeight:"55vh",backgroundSize:"contain",backgroundRepeat:"no-repeat",backgroundPosition:"center"}:{})}:undefined} onClick={()=>setOpen(true)}>{!url&&<span>＋<br/>{label}<br/><small>{hint}</small></span>}</button>
 <input ref={cam} type="file" accept="image/*" capture="environment" hidden onChange={pick}/>
 <input ref={gal} type="file" accept="image/*" hidden onChange={pick}/>
 {crop&&<Cropper src={crop} ar={round?1:null} round={!!round} onCancel={()=>{URL.revokeObjectURL(crop);setCrop(null);done()}} onBad={()=>{URL.revokeObjectURL(crop);setCrop(null);onErr("imgBad")}} onDone={f=>{URL.revokeObjectURL(crop);setCrop(null);done();onFile(f)}}/>}

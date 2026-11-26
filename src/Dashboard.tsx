@@ -62,7 +62,7 @@ return(<div className="app">
 {dlg==="loc"&&<div className="mo-wrap" onClick={()=>setDlg("")}><div className="mo-box" role="dialog" aria-label={t.locationT} onClick={e=>e.stopPropagation()}><h2>{t.locationT}</h2>
 {COUNTRIES.map(([k,n])=><button type="button" key={k} className="mo-row" onClick={()=>{setRegion(k);try{localStorage.setItem("region",k)}catch{/* babu ajiya */}setDlg("")}}><b>{n}</b>{region===k&&<span> ✓</span>}</button>)}</div></div>}
 {menu&&<div className="scrim" onClick={close}><nav className="drawer" onClick={e=>e.stopPropagation()}>
-<div className="dhead"><a className="dprof" href="#/signin" onClick={close}><span className="av">{user?.photoURL?<img src={user.photoURL} alt=""/>:<b>{ini}</b>}</span><span className="dn">{user?nm:t.btnIn}</span><Chev/></a></div>
+<div className="dhead"><a className="dprof" href={user?"#/me":"#/signin"} onClick={close}><span className="av">{user?.photoURL?<img src={user.photoURL} alt=""/>:<b>{ini}</b>}</span><span className="dn">{user?nm:t.btnIn}</span><Chev/></a></div>
 <div className="dbody">
 <p className="dsec">{t.tournaments}</p>
 <Item d={IC.trophy} label={t.organize} href={user?"#/organize":"#/signin"} onClick={close}/>
@@ -80,7 +80,7 @@ return(<div className="app">
 <Item d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" label={`${t.appTheme}: ${theme==="dark"?t.themeDark:theme==="system"?t.themeSystem:t.themeLight}`} onClick={()=>{setMenu(false);setDlg("theme")}}/>
 <p className="dsec">{t.userSec}</p>
 <Item d={IC.bell} label={t.notifs} href="#/notifications" onClick={close} badge={unread}/>
-<Item d={IC.user} label={user?t.account:t.btnIn} href="#/signin" onClick={close}/>
+<Item d={IC.user} label={user?t.account:t.btnIn} href={user?"#/me":"#/signin"} onClick={close}/>
 {isAdmin&&<Item d={IC.shield} label={t.admin} href="#/admin" onClick={close}/>}
 </div></nav></div>}
 <div className="search"><input value={q} onChange={e=>setQ(e.target.value)} placeholder={t.search} aria-label={t.search}/><button className="fb" aria-label={t.flT} onClick={()=>{setDr(flt);setFs(true)}}>⚙</button></div>

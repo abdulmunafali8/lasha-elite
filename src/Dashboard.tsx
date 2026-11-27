@@ -16,9 +16,9 @@ const Item=({d,label,href,onClick,badge}:{d:string;label:string;href?:string;onC
 return href?<a className="ditem" href={href} onClick={onClick}>{body}</a>:<button type="button" className="ditem" onClick={onClick}>{body}</button>};
 
 export default function Dashboard(){
-const {t,toggle,lang}=useLang();const [user,setUser]=useState<User|null>(null);const [q,setQ]=useState("");const [region,setRegion]=useState(()=>{try{return localStorage.getItem("region")||"NG"}catch{return"NG"}});const [menu,setMenu]=useState(false);const [dlg,setDlg]=useState<""|"contacts"|"loc"|"theme">("");const [moreO,setMoreO]=useState(false);const [fs,setFs]=useState(false);
+const {t,toggle,lang}=useLang();const [user,setUser]=useState<User|null>(null);const [photo,setPhoto]=useState("");const [q,setQ]=useState("");const [region,setRegion]=useState(()=>{try{return localStorage.getItem("region")||"NG"}catch{return"NG"}});const [menu,setMenu]=useState(false);const [dlg,setDlg]=useState<""|"contacts"|"loc"|"theme">("");const [moreO,setMoreO]=useState(false);const [fs,setFs]=useState(false);
 const [flt,setFlt]=useState<Flt>(()=>{try{return {...DEF,...JSON.parse(localStorage.getItem("dflt")||"{}")}}catch{return DEF}});const [dr,setDr]=useState<Flt>(DEF);const [theme,setThemeS]=useState<Theme>(getTheme());const [isAdmin,setIsAdmin]=useState(false);const [ci,setCi]=useState(0);
-useEffect(()=>onAuthStateChanged(auth,async u=>{setUser(u);setIsAdmin(false);if(u){try{setIsAdmin((await getDoc(doc(db,"users",u.uid))).data()?.role==="superadmin")}catch{}}}),[]);
+useEffect(()=>onAuthStateChanged(auth,async u=>{setUser(u);setIsAdmin(false);setPhoto("");if(u){try{const d=(await getDoc(doc(db,"users",u.uid))).data();setIsAdmin(d?.role==="superadmin");setPhoto(typeof d?.photoURL==="string"?d.photoURL:"")}catch{}}}),[]);
 const follow=useLive<Competition>(useMemo(()=>user?query(collection(db,"competitions"),where("followers","array-contains",user.uid)):null,[user]));
 const mine=useLive<Competition>(useMemo(()=>user?query(collection(db,"competitions"),where("ownerId","==",user.uid)):null,[user]));
 const act=useLive<Activity>(useMemo(()=>query(collection(db,"activity"),orderBy("createdAt","desc"),limit(5)),[]));
@@ -62,7 +62,7 @@ return(<div className="app">
 {dlg==="loc"&&<div className="mo-wrap" onClick={()=>setDlg("")}><div className="mo-box" role="dialog" aria-label={t.locationT} onClick={e=>e.stopPropagation()}><h2>{t.locationT}</h2>
 {COUNTRIES.map(([k,n])=><button type="button" key={k} className="mo-row" onClick={()=>{setRegion(k);try{localStorage.setItem("region",k)}catch{/* babu ajiya */}setDlg("")}}><b>{n}</b>{region===k&&<span> ✓</span>}</button>)}</div></div>}
 {menu&&<div className="scrim" onClick={close}><nav className="drawer" onClick={e=>e.stopPropagation()}>
-<div className="dhead"><a className="dprof" href={user?"#/me":"#/signin"} onClick={close}><span className="av">{user?.photoURL?<img src={user.photoURL} alt=""/>:<b>{ini}</b>}</span><span className="dn">{user?nm:t.btnIn}</span><Chev/></a></div>
+<div className="dhead"><a className="dprof" href={user?"#/me":"#/signin"} onClick={close}><span className="av">{(photo||user?.photoURL)?<img src={photo||user?.photoURL||""} alt="" style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"50%",display:"block"}}/>:<b>{ini}</b>}</span><span className="dn">{user?nm:t.btnIn}</span><Chev/></a></div>
 <div className="dbody">
 <p className="dsec">{t.tournaments}</p>
 <Item d={IC.trophy} label={t.organize} href={user?"#/organize":"#/signin"} onClick={close}/>

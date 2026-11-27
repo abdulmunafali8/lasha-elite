@@ -2,7 +2,7 @@ import {useEffect,useRef,useState,FormEvent} from "react";
 import {EmailAuthProvider,GoogleAuthProvider,User,deleteUser,onAuthStateChanged,reauthenticateWithCredential,reauthenticateWithPopup,signOut,updateProfile} from "firebase/auth";
 import {doc,getDoc} from "firebase/firestore";
 import {getDownloadURL,getStorage,ref,uploadBytesResumable} from "firebase/storage";
-import {auth,db} from "./firebase";
+import {auth,db,uploadImg} from "./firebase";
 import ImagePick from "./ImagePick";
 import {useLang} from "./i18n";
 
@@ -12,19 +12,26 @@ const X:Record<"ha"|"en",Record<string,string>>={
 ha:{title:"Asusuna",outT:"Ba ka shiga ba",outD:"Ka shiga don ganin asusunka da canza bayananka.",signIn:"Shiga",details:"Bayanan kai",name:"Suna",email:"Imel",emailLock:"Ba a canza imel a nan.",photo:"Canza hoto",
 save:"Ajiye canje-canje",up:"Ana ɗora hoto",saving:"Ana ajiyewa",done:"An ajiye",unsaved:"Akwai canje-canje da ba a ajiye ba",logout:"Fita daga asusu",remove:"Cire asusu (Remove user)",since:"Memba tun",
 delT:"Cire asusunka?",delD:"Za a goge asusun shiganka na dindindin. Gasar da ka ƙirƙira ba za a goge su kai tsaye ba, don haka ka goge su tukuna idan kana so.",pw:"Kalmar sirri",ack:"Na fahimta, ina so a cire asusuna",cancel:"Soke",delBtn:"Cire na dindindin",
-nameShort:"Suna ya yi gajeru, aƙalla haruffa 2.",imgBad:"Zaɓi hoto (JPG ko PNG) wanda bai wuce 2 MB ba.",eStore:"Ba a ba ka izinin ɗora hoto ba. Duba dokokin Storage a Firebase.",err:"Wani abu ya faru, sake gwadawa",
+nameShort:"Suna ya yi gajeru, aƙalla haruffa 2.",imgBad:"Zaɓi hoto (JPG ko PNG) wanda bai wuce 2 MB ba.",eStore:"Ba a ba ka izinin ɗora hoto ba. Duba dokokin Storage a Firebase.",eNet:"Ɗora hoton bai yi nasara ba. Duba intanet ɗinka, sai ka sake gwadawa.",err:"Wani abu ya faru, sake gwadawa",
 badPw:"Kalmar sirri ba daidai ba ce.",needPw:"Shigar da kalmar sirrinka.",many:"An yi ƙoƙari da yawa. Jira kaɗan, sai ka sake gwadawa.",recent:"Ka fita ka sake shiga, sannan ka sake gwadawa.",
 organizer:"Mai shirya gasa",player:"Ɗan wasa",viewer:"Mai kallo",superadmin:"Super admin",back:"Koma baya",userFb:"Mai amfani"},
 en:{title:"My user",outT:"You are signed out",outD:"Sign in to see your account and edit your details.",signIn:"Sign in",details:"Your details",name:"Name",email:"Email",emailLock:"Email can’t be changed here.",photo:"Change photo",
 save:"Save changes",up:"Uploading photo",saving:"Saving",done:"Saved",unsaved:"You have unsaved changes",logout:"Log out",remove:"Remove user",since:"Member since",
 delT:"Remove your user?",delD:"Your sign-in account will be deleted permanently. Tournaments you created are not deleted automatically, so delete them first if you want them gone.",pw:"Password",ack:"I understand, remove my account",cancel:"Cancel",delBtn:"Remove permanently",
-nameShort:"Name is too short, use at least 2 characters.",imgBad:"Pick an image (JPG or PNG) under 2 MB.",eStore:"You are not allowed to upload photos. Check the Storage rules in Firebase.",err:"Something went wrong, try again",
+nameShort:"Name is too short, use at least 2 characters.",imgBad:"Pick an image (JPG or PNG) under 2 MB.",eStore:"You are not allowed to upload photos. Check the Storage rules in Firebase.",eNet:"The upload did not finish. Check your connection and try again.",err:"Something went wrong, try again",
 badPw:"That password is not correct.",needPw:"Enter your password.",many:"Too many attempts. Wait a moment and try again.",recent:"Log out, sign in again, then retry.",
 organizer:"Organizer",player:"Player",viewer:"Viewer",superadmin:"Super admin",back:"Back",userFb:"User"}};
 
-function upload(uid:string,f:File,on:(n:number)=>void){return new Promise<string>((res,rej)=>{
-const task=uploadBytesResumable(ref(getStorage(),`competitions/${uid}/profile/avatar`),f,{contentType:f.type||"image/jpeg",cacheControl:"public,max-age=3600"});
-task.on("state_changed",s=>on(Math.round(s.bytesTransferred/s.totalBytes*100)),rej,()=>getDownloadURL(task.snapshot.ref).then(u=>res(u+(u.includes("?")?"&":"?")+"v="+Date.now()),rej))})}
+const bust=(u:string)=>u+(u.includes("?")?"&":"?")+"v="+Date.now();
+async function upload(uid:string,f:File,on:(n:number)=>void,slow:()=>void){
+const path=`competitions/${uid}/profile/avatar`;const st=getStorage();
+try{st.maxUploadRetryTime=15000;st.maxOperationRetryTime=15000;
+return await new Promise<string>((res,rej)=>{
+const task=uploadBytesResumable(ref(st,path),f,{contentType:f.type||"image/jpeg",cacheControl:"public,max-age=3600"});
+task.on("state_changed",s=>on(Math.round(s.bytesTransferred/s.totalBytes*100)),rej,()=>getDownloadURL(task.snapshot.ref).then(u=>res(bust(u)),rej))})}
+catch(e){const c=(e as {code?:string})?.code??"";
+if(c!=="storage/retry-limit-exceeded"&&c!=="storage/unknown")throw e;
+st.maxUploadRetryTime=600000;st.maxOperationRetryTime=120000;slow();return bust(await uploadImg(path,f))}}
 
 const Ic=({d,s=22}:{d:string;s?:number})=><svg viewBox="0 0 24 24" width={s} height={s} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d}/></svg>;
 const P={back:"M19 12H5M12 5l-7 7 7 7",cam:"M4 8h3l2-3h6l2 3h3v11H4zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8",lock:"M6 11h12v9H6zM8 11V8a4 4 0 0 1 8 0v3",out:"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",trash:"M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",check:"M5 12.5l4.5 4.5L19 7.5",user:"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"};
@@ -80,6 +87,7 @@ html[data-theme="dark"] .mu{--bg:#0b1424;--card:#111d33;--ink:#e8edf8;--mu:#9aa6
 .mu-save .fl.ind{width:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.34),transparent);transform:translateX(-100%);animation:mus 1.1s linear infinite}
 .mu-save>span{position:relative;display:flex;align-items:center;gap:10px}
 @keyframes mus{to{transform:translateX(100%)}}
+.mu-spin.big{width:30px;height:30px;border-width:3px}
 .mu-spin{width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;animation:mur .7s linear infinite}
 @keyframes mur{to{transform:rotate(360deg)}}
 .mu-sec{margin-top:30px;border-top:1px solid var(--ln)}
@@ -121,7 +129,7 @@ export default function Profile(){
 const {lang}=useLang();const L=X[lang];
 const [user,setUser]=useState<User|null|undefined>(undefined);
 const [name,setName]=useState("");const [file,setFile]=useState<File|null>(null);
-const [phase,setPhase]=useState<"idle"|"up"|"save"|"ok">("idle");const [pct,setPct]=useState(0);
+const [phase,setPhase]=useState<"idle"|"up"|"save"|"ok">("idle");const [pct,setPct]=useState(0);const [ind,setInd]=useState(false);
 const [toast,setToast]=useState<{m:string;bad:boolean}|null>(null);const [role,setRole]=useState("");
 const [dlg,setDlg]=useState(false);const [pw,setPw]=useState("");const [ack,setAck]=useState(false);const [dBusy,setDBusy]=useState(false);const [dErr,setDErr]=useState("");
 const tm=useRef<number[]>([]);
@@ -132,7 +140,7 @@ useEffect(()=>{if(!user)return;setName(user.displayName??"");
 getDoc(doc(db,"users",user.uid)).then(s=>{const r=s.exists()?String((s.data() as {role?:string}).role??""):"";setRole(r)}).catch(()=>{})},[uid]);
 const flash=(m:string,bad=false)=>{setToast({m,bad});tm.current.push(window.setTimeout(()=>setToast(null),3400))};
 const errText=(e:unknown)=>{const c=(e as {code?:string})?.code??"";
-if(c==="storage/unauthorized")return L.eStore;if(c==="auth/too-many-requests")return L.many;if(c==="auth/requires-recent-login")return L.recent;
+if(c==="storage/unauthorized")return L.eStore;if(c==="storage/retry-limit-exceeded"||c==="storage/canceled")return L.eNet;if(c==="auth/too-many-requests")return L.many;if(c==="auth/requires-recent-login")return L.recent;
 if(c==="auth/wrong-password"||c==="auth/invalid-credential"||c==="auth/invalid-login-credentials")return L.badPw;return L.err+(c?" ("+c+")":"")};
 
 const goBack=()=>{location.hash="#/"};
@@ -141,7 +149,7 @@ const cur=(user?.displayName??"");const dirty=!!user&&(name.trim()!==cur||!!file
 const onSave=async(e:FormEvent)=>{e.preventDefault();if(!user||!dirty||busy)return;const n=name.trim();
 if(n.length<2){flash(L.nameShort,true);return}
 try{let photoURL=user.photoURL;
-if(file){setPhase("up");setPct(0);photoURL=await upload(user.uid,file,setPct)}
+if(file){setInd(false);setPhase("up");setPct(0);photoURL=await upload(user.uid,file,setPct,()=>setInd(true))}
 setPhase("save");await updateProfile(user,{displayName:n,photoURL});
 setFile(null);setPhase("ok");flash(L.done);tm.current.push(window.setTimeout(()=>setPhase("idle"),1800))}
 catch(x){setPhase("idle");flash(errText(x),true)}};
@@ -159,13 +167,13 @@ const em=user?.email??"";const shown=name.trim()||(em.split("@")[0])||L.userFb;
 const ini=(shown.match(/\p{L}|\p{N}/u)?.[0]??"?").toUpperCase();
 const since=user?.metadata.creationTime?new Date(user.metadata.creationTime).toLocaleDateString("en-GB",{month:"short",year:"numeric"}):"";
 const R=51.5,C=2*Math.PI*R;
-const fill=phase==="up"?Math.round(pct*.85):phase==="save"?92:phase==="ok"?100:0;
-const label=phase==="up"?`${L.up} ${pct}%`:phase==="save"?L.saving:phase==="ok"?L.done:L.save;
+const fill=phase==="up"?(ind?92:Math.round(pct*.85)):phase==="save"?92:phase==="ok"?100:0;
+const label=phase==="up"?(ind?L.up:`${L.up} ${pct}%`):phase==="save"?L.saving:phase==="ok"?L.done:L.save;
 
 return(<div className="mu"><style>{CSS}</style>
 {toast&&<div className={"mu-toast"+(toast.bad?" err":"")} role={toast.bad?"alert":"status"}>{toast.m}</div>}
 <div className="mu-wrap">
-<header className="mu-bar"><button type="button" className="mu-back" onClick={goBack} aria-label={L.back}><Ic d={P.back}/></button><h1>{L.title}</h1></header>
+<div className="mu-bar"><button type="button" className="mu-back" onClick={goBack} aria-label={L.back}><Ic d={P.back}/></button><h1>{L.title}</h1></div>
 {user===undefined&&<div className="mu-sk" aria-hidden="true"/>}
 {user===null&&<section className="mu-out"><div className="ic"><Ic d={P.user} s={30}/></div><h2>{L.outT}</h2><p>{L.outD}</p><a href="#/signin">{L.signIn}</a></section>}
 {user&&<>
@@ -174,8 +182,8 @@ return(<div className="mu"><style>{CSS}</style>
 <div className={"mu-av"+(phase==="up"?" up":"")}>
 <span className="mu-ini" aria-hidden="true">{ini}</span>
 <ImagePick label={L.photo} hint="" file={file} onFile={setFile} onErr={()=>flash(L.imgBad,true)} current={user.photoURL??undefined} round/>
-<svg className="mu-ring" viewBox="0 0 112 112" aria-hidden="true" style={{opacity:phase==="up"?1:0}}><circle className="t" cx="56" cy="56" r={R}/><circle className="p" cx="56" cy="56" r={R} strokeDasharray={C} strokeDashoffset={C*(1-pct/100)}/></svg>
-{phase==="up"&&<div className="mu-shade" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>{pct}%</div>}
+<svg className="mu-ring" viewBox="0 0 112 112" aria-hidden="true" style={{opacity:phase==="up"&&!ind?1:0}}><circle className="t" cx="56" cy="56" r={R}/><circle className="p" cx="56" cy="56" r={R} strokeDasharray={C} strokeDashoffset={C*(1-pct/100)}/></svg>
+{phase==="up"&&<div className="mu-shade" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={ind?undefined:pct}>{ind?<i className="mu-spin big" aria-hidden="true"/>:pct+"%"}</div>}
 <span className="mu-cam" aria-hidden="true"><Ic d={P.cam} s={16}/></span>
 </div>
 <div className="mu-id"><h2>{shown}</h2><p>{em}</p></div>
@@ -190,7 +198,7 @@ return(<div className="mu"><style>{CSS}</style>
 <p className="mu-note" id="mu-mn">{L.emailLock}</p>
 {dirty&&phase==="idle"&&<p className="mu-un" role="status"><i/>{L.unsaved}</p>}
 <button className={"mu-save "+(phase==="ok"?"ok":busy?"busy":"idle")} disabled={busy||phase==="ok"||!dirty} style={{["--p" as string]:fill+"%"}}>
-<span className={"fl"+(phase==="save"&&!file?" ind":"")}/>
+<span className={"fl"+((phase==="save"&&!file)||(phase==="up"&&ind)?" ind":"")}/>
 <span>{busy&&<i className="mu-spin" aria-hidden="true"/>}{phase==="ok"&&<Ic d={P.check} s={20}/>}{label}</span>
 </button>
 </form>

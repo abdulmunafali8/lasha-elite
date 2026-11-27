@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState,FormEvent} from "react";
 import {EmailAuthProvider,GoogleAuthProvider,User,deleteUser,onAuthStateChanged,reauthenticateWithCredential,reauthenticateWithPopup,signOut,updateProfile} from "firebase/auth";
-import {doc,getDoc} from "firebase/firestore";
+import {doc,getDoc,updateDoc} from "firebase/firestore";
 import {getDownloadURL,getStorage,ref,uploadBytesResumable} from "firebase/storage";
 import {auth,db,uploadImg} from "./firebase";
 import ImagePick from "./ImagePick";
@@ -22,16 +22,26 @@ nameShort:"Name is too short, use at least 2 characters.",imgBad:"Pick an image 
 badPw:"That password is not correct.",needPw:"Enter your password.",many:"Too many attempts. Wait a moment and try again.",recent:"Log out, sign in again, then retry.",
 organizer:"Organizer",player:"Player",viewer:"Viewer",superadmin:"Super admin",back:"Back",userFb:"User"}};
 
-const bust=(u:string)=>u+(u.includes("?")?"&":"?")+"v="+Date.now();
-async function upload(uid:string,f:File,on:(n:number)=>void,slow:()=>void){
-const path=`competitions/${uid}/profile/avatar`;const st=getStorage();
-try{st.maxUploadRetryTime=15000;st.maxOperationRetryTime=15000;
+const bust=(u:string)=>u.startsWith("data:")?u:u+(u.includes("?")?"&":"?")+"v="+Date.now();
+const FLAG="lasha_storage_bad";
+const flag=(v?:string)=>{try{if(v)localStorage.setItem(FLAG,v);return localStorage.getItem(FLAG)==="1"}catch{return false}};
+/* avatar is shown small, so keep it small: max 320px JPEG (a few tens of KB) */
+async function toJpeg(f:File,max=320){const u=URL.createObjectURL(f);try{
+const i=await new Promise<HTMLImageElement>((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=u});
+const k=Math.min(1,max/Math.max(i.naturalWidth,i.naturalHeight));const c=document.createElement("canvas");c.width=Math.max(1,Math.round(i.naturalWidth*k));c.height=Math.max(1,Math.round(i.naturalHeight*k));
+const g=c.getContext("2d")!;g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);g.drawImage(i,0,0,c.width,c.height);
+const b=await new Promise<Blob|null>(r=>c.toBlob(r,"image/jpeg",.86));return b?new File([b],"avatar.jpg",{type:"image/jpeg"}):f}catch{return f}finally{URL.revokeObjectURL(u)}}
+async function upload(uid:string,f0:File,on:(n:number)=>void,slow:()=>void){
+const f=await toJpeg(f0);const path=`competitions/${uid}/profile/avatar`;
+if(!flag()){const st=getStorage();
+try{st.maxUploadRetryTime=8000;st.maxOperationRetryTime=8000;
 return await new Promise<string>((res,rej)=>{
-const task=uploadBytesResumable(ref(st,path),f,{contentType:f.type||"image/jpeg",cacheControl:"public,max-age=3600"});
+const task=uploadBytesResumable(ref(st,path),f,{contentType:"image/jpeg",cacheControl:"public,max-age=3600"});
 task.on("state_changed",s=>on(Math.round(s.bytesTransferred/s.totalBytes*100)),rej,()=>getDownloadURL(task.snapshot.ref).then(u=>res(bust(u)),rej))})}
 catch(e){const c=(e as {code?:string})?.code??"";
-if(c!=="storage/retry-limit-exceeded"&&c!=="storage/unknown")throw e;
-st.maxUploadRetryTime=600000;st.maxOperationRetryTime=120000;slow();return bust(await uploadImg(path,f))}}
+if(c!=="storage/retry-limit-exceeded"&&c!=="storage/unknown"&&c!=="storage/bucket-not-found")throw e;
+flag("1")}finally{st.maxUploadRetryTime=600000;st.maxOperationRetryTime=120000}}
+slow();return bust(await uploadImg(path,f))}
 
 const Ic=({d,s=22}:{d:string;s?:number})=><svg viewBox="0 0 24 24" width={s} height={s} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d}/></svg>;
 const P={back:"M19 12H5M12 5l-7 7 7 7",cam:"M4 8h3l2-3h6l2 3h3v11H4zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8",lock:"M6 11h12v9H6zM8 11V8a4 4 0 0 1 8 0v3",out:"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",trash:"M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",check:"M5 12.5l4.5 4.5L19 7.5",user:"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"};
@@ -130,14 +140,14 @@ const {lang}=useLang();const L=X[lang];
 const [user,setUser]=useState<User|null|undefined>(undefined);
 const [name,setName]=useState("");const [file,setFile]=useState<File|null>(null);
 const [phase,setPhase]=useState<"idle"|"up"|"save"|"ok">("idle");const [pct,setPct]=useState(0);const [ind,setInd]=useState(false);
-const [toast,setToast]=useState<{m:string;bad:boolean}|null>(null);const [role,setRole]=useState("");
+const [toast,setToast]=useState<{m:string;bad:boolean}|null>(null);const [role,setRole]=useState("");const [fsPhoto,setFsPhoto]=useState("");
 const [dlg,setDlg]=useState(false);const [pw,setPw]=useState("");const [ack,setAck]=useState(false);const [dBusy,setDBusy]=useState(false);const [dErr,setDErr]=useState("");
 const tm=useRef<number[]>([]);
 useEffect(()=>onAuthStateChanged(auth,u=>setUser(u)),[]);
 useEffect(()=>()=>{tm.current.forEach(clearTimeout)},[]);
 const uid=user?.uid;
 useEffect(()=>{if(!user)return;setName(user.displayName??"");
-getDoc(doc(db,"users",user.uid)).then(s=>{const r=s.exists()?String((s.data() as {role?:string}).role??""):"";setRole(r)}).catch(()=>{})},[uid]);
+getDoc(doc(db,"users",user.uid)).then(s=>{const d=(s.exists()?s.data():{}) as {role?:string;photoURL?:string};setRole(String(d.role??""));setFsPhoto(String(d.photoURL??""))}).catch(()=>{})},[uid]);
 const flash=(m:string,bad=false)=>{setToast({m,bad});tm.current.push(window.setTimeout(()=>setToast(null),3400))};
 const errText=(e:unknown)=>{const c=(e as {code?:string})?.code??"";
 if(c==="storage/unauthorized")return L.eStore;if(c==="storage/retry-limit-exceeded"||c==="storage/canceled")return L.eNet;if(c==="auth/too-many-requests")return L.many;if(c==="auth/requires-recent-login")return L.recent;
@@ -148,9 +158,10 @@ const busy=phase==="up"||phase==="save";
 const cur=(user?.displayName??"");const dirty=!!user&&(name.trim()!==cur||!!file);
 const onSave=async(e:FormEvent)=>{e.preventDefault();if(!user||!dirty||busy)return;const n=name.trim();
 if(n.length<2){flash(L.nameShort,true);return}
-try{let photoURL=user.photoURL;
+try{let photoURL=fsPhoto||user.photoURL||"";
 if(file){setInd(false);setPhase("up");setPct(0);photoURL=await upload(user.uid,file,setPct,()=>setInd(true))}
-setPhase("save");await updateProfile(user,{displayName:n,photoURL});
+setPhase("save");await updateProfile(user,file&&photoURL.length<=1500?{displayName:n,photoURL}:{displayName:n});
+if(file&&photoURL){await updateDoc(doc(db,"users",user.uid),{photoURL});setFsPhoto(photoURL)}
 setFile(null);setPhase("ok");flash(L.done);tm.current.push(window.setTimeout(()=>setPhase("idle"),1800))}
 catch(x){setPhase("idle");flash(errText(x),true)}};
 const logout=async()=>{try{await signOut(auth);location.hash="#/"}catch(x){flash(errText(x),true)}};
@@ -181,7 +192,7 @@ return(<div className="mu"><style>{CSS}</style>
 <div className="mu-pr">
 <div className={"mu-av"+(phase==="up"?" up":"")}>
 <span className="mu-ini" aria-hidden="true">{ini}</span>
-<ImagePick label={L.photo} hint="" file={file} onFile={setFile} onErr={()=>flash(L.imgBad,true)} current={user.photoURL??undefined} round/>
+<ImagePick label={L.photo} hint="" file={file} onFile={setFile} onErr={()=>flash(L.imgBad,true)} current={fsPhoto||user.photoURL||undefined} round/>
 <svg className="mu-ring" viewBox="0 0 112 112" aria-hidden="true" style={{opacity:phase==="up"&&!ind?1:0}}><circle className="t" cx="56" cy="56" r={R}/><circle className="p" cx="56" cy="56" r={R} strokeDasharray={C} strokeDashoffset={C*(1-pct/100)}/></svg>
 {phase==="up"&&<div className="mu-shade" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={ind?undefined:pct}>{ind?<i className="mu-spin big" aria-hidden="true"/>:pct+"%"}</div>}
 <span className="mu-cam" aria-hidden="true"><Ic d={P.cam} s={16}/></span>
